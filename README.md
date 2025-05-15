@@ -36,7 +36,7 @@ cd ..
 colcon build
 <code>
 
-<h3>Launch Packages<h3>
+<h3>Launch Packages</h3>
 <code>
 source install/setup.bash
 
