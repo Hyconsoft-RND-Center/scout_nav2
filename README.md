@@ -10,35 +10,20 @@ git clone --branch test https://github.com/Hyconsoft-RND-Center/scout_nav2
 </code>
 
 <h3>Installing Dependancy Packages</h3>
-underlay ROS2 package: rosdep
+
+<h4>underlay ROS2 package: rosdep</h4>
+
 <code>
 sudo apt install python3-rosdep # install rosdep if you don't have one
 sudo rosdep init  # rosdep need initialize only once after installation
 rosdep update     # after rosdep init, update rosdep update
 
- 
 rosdep install --from-paths src --ignore-src -r -y   # install packages with rosdep
 </code>
 
 
+<h4>overlay packages: vcs-tools</h4>
 
-
-git packages: vcs-tools
-<code>
-sudo apt install python3-vcs-tools # install vcs-tools if you don't have one
-vcs import . < deps.repos
-</code>
-underlay ROS2 package: rosdep
-<code>
-sudo apt install python3-rosdep # install rosdep if you don't have one
-sudo rosdep init  # rosdep need initialize only once after installation
-rosdep update     # after rosdep init, update rosdep update
-
-# install packages with rosdep
-rosdep install --from-paths src --ignore-src -r -y
-<code>
-
-overlay packages: vcs-tools
 <code>
 cd src/
 sudo apt install python3-vcs-tools # install vcs-tools if you don't have one
