@@ -1,0 +1,59 @@
+### ekf config file ###
+ekf_node:
+  ros__parameters:
+    # 필터 출력 주파수 (Hz)
+    frequency: 10.0 # 30.0 # 현재 컴퓨터가 '너무 빨라서' 10으로 설정
+
+    transform_time_offset: 0.2 # 0.03 
+    transform_timeout: 0.3  # 0.2
+
+    sensor_timeout: 0.3
+
+    # 2D 모드 사용 여부 (플래너 환경에서 필요시 true)
+    two_d_mode: false
+
+    # 가속도 정보를 출력할지 여부
+    publish_acceleration: true
+
+    # /tf 토픽으로 변환을 방송할지 여부
+    publish_tf: true # false #slam_toolbox 또는 , mapping 사용 시: false
+
+    # 프레임 설정 (로봇에 맞게 변경)
+    use_sim_time: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom # map
+    # odom      #mapping, localization (slam_toolbox, lio-sam, pcl-localization-ros2 등) 사용 시: odom 
+
+    odom0: /odom
+    odom0_config: [
+      true, true, false,    # x, y, (no z)
+      false, false, true,   # (no roll), (no pitch), yaw
+      true, true, false,    # vx, vy, (no vz)
+      false, false, true,   # (no vroll), (no vpitch), vyaw
+      false, false, false   # no linear acceleration
+    ]
+    odom0_differential: false
+
+    # PCL localization pose input
+    pose0: /pcl_pose
+    pose0_config: [
+      true, true, false,    # x, y, (no z)
+      false, false, true,  # no orientation correction
+      false, false, false,    # vx, vy, (no vz)
+      false, false, true,   # (no vroll), (no vpitch), vyaw
+      false, false, false   # no linear acceleration
+    ]
+    pose0_differential: false
+
+    # IMU input (optional)
+    imu0: /imu/data
+    imu0_config: [
+      false, false, false,  # no position
+      false, false, true,  # no orientation
+      false, false, false,  # no linear velocity
+      false, false, true,   # use yaw rate
+      false, false, false   # no linear acceleration
+    ]
+    imu0_differential: false
