@@ -1,4 +1,7 @@
 repositories:
+  # cd your_workspacename_ws/src
+  # sudo apt install python3-vcstools
+  # vcs import . < scout_nav2/deps.repos
   
   # 3D pcd SLAM Package
   TixiaoShan/LIO-SAM:
