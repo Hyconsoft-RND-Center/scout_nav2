@@ -40,10 +40,7 @@ cd src/
 
 `
 sudo apt install python3-vcs-tools # install vcs-tools if you don't have one
-`
-
-`
-vcs import . < deps.repos
+vcs import . < ../deps.repos
 `
 
 ## Build Packages

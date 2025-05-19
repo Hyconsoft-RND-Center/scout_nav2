@@ -7,22 +7,24 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
+add_executable(imu_no_orientation_node src/imu_no_orientation_node.cpp)
+ament_target_dependencies(imu_no_orientation_node
+  rclcpp
+  sensor_msgs
+)
+install(TARGETS imu_no_orientation_node DESTINATION lib/${PROJECT_NAME})
 
 install( DIRECTORY
-  #src
+  src
   launch
   config
   rviz
 
   DESTINATION share/${PROJECT_NAME}
 )
-
-
-
-
-
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
