@@ -8,7 +8,8 @@ public:
   : Node("imu_no_orientation_node")
   {
     imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
-      "/imu/out", 10,
+      "/ouster/imu", 10,
+      // /imu/out >> /ouster/imu
       std::bind(&ImuNoOrientationNode::imuCallback, this, std::placeholders::_1));
 
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu/no_orientation", 10);

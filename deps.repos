@@ -4,16 +4,16 @@ repositories:
   # vcs import . < scout_nav2/deps.repos
   
   # 3D pcd SLAM Package
-  TixiaoShan/LIO-SAM:
-    type: git
-    url: https://github.com/TixiaoShan/LIO-SAM
-    version: ros2
+  #TixiaoShan/LIO-SAM:
+  # type: git
+  #  url: https://github.com/TixiaoShan/LIO-SAM
+  #  version: ros2
 
   # 3D pcd Localization
-  rsasaki0109/lidar_localization_ros2:
-    type: git
-    url: https://github.com/rsasaki0109/lidar_localization_ros2.git
-    version: humble
+  #rsasaki0109/lidar_localization_ros2:
+  #  type: git
+  #  url: https://github.com/rsasaki0109/lidar_localization_ros2.git
+  #  version: humble
 
   rsasaki0109/ndt_omp_ros2:  # dependancy package
     type: git

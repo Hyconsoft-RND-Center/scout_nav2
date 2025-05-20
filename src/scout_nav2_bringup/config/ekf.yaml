@@ -2,7 +2,7 @@
 ekf_node:
   ros__parameters:
     # 필터 출력 주파수 (Hz)
-    frequency: 10.0 # 30.0 # 현재 컴퓨터가 '너무 빨라서' 10으로 설정
+    frequency: 30.0 # 30.0 # 현재 컴퓨터가 '너무 빨라서' 10으로 설정
 
     transform_time_offset: 0.2 # 0.03 
     transform_timeout: 0.3  # 0.2
