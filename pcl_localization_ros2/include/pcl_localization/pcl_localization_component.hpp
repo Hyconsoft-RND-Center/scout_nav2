@@ -121,6 +121,8 @@ public:
   double last_odom_received_time_;
   bool use_imu_{false};
   bool enable_debug_{false};
+  bool publish_tf_{false};
+  bool convert_pose_{false};
 
   int ndt_num_threads_;
 

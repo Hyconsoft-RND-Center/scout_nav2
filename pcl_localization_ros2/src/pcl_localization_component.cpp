@@ -31,6 +31,8 @@ PCLLocalization::PCLLocalization(const rclcpp::NodeOptions & options)
   declare_parameter("use_odom", false);
   declare_parameter("use_imu", false);
   declare_parameter("enable_debug", false);
+  declare_parameter("publish_tf", false);
+  declare_parameter("convert_pose", false);
 }
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -177,6 +179,8 @@ void PCLLocalization::initializeParameters()
   get_parameter("use_odom", use_odom_);
   get_parameter("use_imu", use_imu_);
   get_parameter("enable_debug", enable_debug_);
+  get_parameter("publish_tf", publish_tf_);
+  get_parameter("convert_pose", convert_pose_);
 
   RCLCPP_INFO(get_logger(),"global_frame_id: %s", global_frame_id_.c_str());
   RCLCPP_INFO(get_logger(),"odom_frame_id: %s", odom_frame_id_.c_str());
@@ -196,6 +200,8 @@ void PCLLocalization::initializeParameters()
   RCLCPP_INFO(get_logger(),"use_odom: %d", use_odom_);
   RCLCPP_INFO(get_logger(),"use_imu: %d", use_imu_);
   RCLCPP_INFO(get_logger(),"enable_debug: %d", enable_debug_);
+  RCLCPP_INFO(get_logger(),"publish_tf : %d", publish_tf_);
+  RCLCPP_INFO(get_logger(),"convert_pose : %d", convert_pose_);
 }
 
 void PCLLocalization::initializePubSub()
@@ -445,10 +451,28 @@ void PCLLocalization::cloudReceived(const sensor_msgs::msg::PointCloud2::ConstSh
   pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_ptr(new pcl::PointCloud<pcl::PointXYZI>(tmp));
   registration_->setInputSource(tmp_ptr);
 
+  geometry_msgs::msg::TransformStamped tf_b2s;
+  try {
+    tf_b2s = tfbuffer_.lookupTransform(
+                msg->header.frame_id,   // target = cloud frame
+                base_frame_id_,         // source = base_link
+                msg->header.stamp,
+                tf2::durationFromSec(0.05));
+  } catch (const tf2::TransformException &ex) {
+    RCLCPP_WARN(get_logger(), "TF lookup failed: %s", ex.what());
+    return;
+  }
+  Eigen::Matrix4f T_b2s = tf2::transformToEigen(tf_b2s).matrix().cast<float>(); // cloud frame -> base_link tf
+
   Eigen::Affine3d affine;
   tf2::fromMsg(corrent_pose_with_cov_stamped_ptr_->pose.pose, affine);
 
   Eigen::Matrix4f init_guess = affine.matrix().cast<float>();
+
+  // map -> base_link tf calculation
+  if (convert_pose_) {
+    init_guess = affine.matrix().cast<float>() * T_b2s;
+  }
 
   pcl::PointCloud<pcl::PointXYZI>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZI>);
   rclcpp::Clock system_clock;
@@ -467,6 +491,12 @@ void PCLLocalization::cloudReceived(const sensor_msgs::msg::PointCloud2::ConstSh
   }
 
   Eigen::Matrix4f final_transformation = registration_->getFinalTransformation();
+
+  // map -> base_link pose final generation
+  if (convert_pose_) {
+    final_transformation = final_transformation * T_b2s.inverse();
+  }
+
   Eigen::Matrix3d rot_mat = final_transformation.block<3, 3>(0, 0).cast<double>();
   Eigen::Quaterniond quat_eig(rot_mat);
   geometry_msgs::msg::Quaternion quat_msg = tf2::toMsg(quat_eig);
@@ -479,15 +509,18 @@ void PCLLocalization::cloudReceived(const sensor_msgs::msg::PointCloud2::ConstSh
   corrent_pose_with_cov_stamped_ptr_->pose.pose.orientation = quat_msg;
   pose_pub_->publish(*corrent_pose_with_cov_stamped_ptr_);
 
-  geometry_msgs::msg::TransformStamped transform_stamped;
-  transform_stamped.header.stamp = msg->header.stamp;
-  transform_stamped.header.frame_id = global_frame_id_;
-  transform_stamped.child_frame_id = base_frame_id_;
-  transform_stamped.transform.translation.x = static_cast<double>(final_transformation(0, 3));
-  transform_stamped.transform.translation.y = static_cast<double>(final_transformation(1, 3));
-  transform_stamped.transform.translation.z = static_cast<double>(final_transformation(2, 3));
-  transform_stamped.transform.rotation = quat_msg;
-  broadcaster_.sendTransform(transform_stamped);
+  if (publish_tf_) {
+    geometry_msgs::msg::TransformStamped transform_stamped;
+    transform_stamped.header.stamp = msg->header.stamp;
+    transform_stamped.header.frame_id = global_frame_id_;
+    transform_stamped.child_frame_id = base_frame_id_;
+    transform_stamped.transform.translation.x = static_cast<double>(final_transformation(0, 3));
+    transform_stamped.transform.translation.y = static_cast<double>(final_transformation(1, 3));
+    transform_stamped.transform.translation.z = static_cast<double>(final_transformation(2, 3));
+    transform_stamped.transform.rotation = quat_msg;
+    broadcaster_.sendTransform(transform_stamped);
+  }
+
 
   geometry_msgs::msg::PoseStamped::SharedPtr pose_stamped_ptr(new geometry_msgs::msg::PoseStamped);
   pose_stamped_ptr->header.stamp = msg->header.stamp;
