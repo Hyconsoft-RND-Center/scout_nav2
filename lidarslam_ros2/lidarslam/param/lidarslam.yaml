@@ -3,18 +3,18 @@ scan_matcher:
     global_frame_id: "map"
     robot_frame_id: "base_link"
     registration_method: "NDT"
-    ndt_resolution: 2.0
+    ndt_resolution: 1.0
     ndt_num_threads: 2
     gicp_corr_dist_threshold: 5.0
-    trans_for_mapupdate: 1.5
+    trans_for_mapupdate: 1.0
     vg_size_for_input: 0.5
     vg_size_for_map: 0.1
     use_min_max_filter: true
     scan_min_range: 1.0
-    scan_max_range: 120.0
-    scan_period: 0.2
-    map_publish_period: 10.0
-    num_targeted_cloud: 20
+    scan_max_range: 30.0
+    scan_period: 0.1
+    map_publish_period: 5.0
+    num_targeted_cloud: 40
     set_initial_pose: true
     initial_pose_x: 0.0
     initial_pose_y: 0.0
@@ -24,9 +24,9 @@ scan_matcher:
     initial_pose_qz: 0.0
     initial_pose_qw: 1.0
     use_imu: false
-    use_odom: false
+    use_odom: true
     debug_flag: false
-    publish_tf: false
+    publish_tf: true
 
 graph_based_slam:
     ros__parameters:
