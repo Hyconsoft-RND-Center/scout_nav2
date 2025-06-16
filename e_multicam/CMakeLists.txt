@@ -33,6 +33,7 @@ include_directories(
     ${X11_INCLUDE_DIRS}
     src
     include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/e_multicam
 )
 
 # Link libraries globally like the original
