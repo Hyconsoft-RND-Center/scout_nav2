@@ -1,5 +1,5 @@
-#include "main.h"
-#include "v4l2_capture.h"
+#include "e_multicam/main.h"
+#include "e_multicam/v4l2_capture.h"
 
 #define SYNC_TOLERANCE_US 1000
 

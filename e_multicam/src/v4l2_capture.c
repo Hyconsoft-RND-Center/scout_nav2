@@ -1,8 +1,8 @@
 #include <stdio_ext.h>
-#include "debug.h"
+#include "e_multicam/debug.h"
 #define _ISOC11_SOURCE
 #include <stdlib.h>
-#include "main.h"
+#include "e_multicam/main.h"
 #define READ 0
 #define WRITE 1
 #define YELLOW "\x1B[33m"

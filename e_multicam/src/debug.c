@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "e_multicam/debug.h"
 
 int log_level = 3;
 

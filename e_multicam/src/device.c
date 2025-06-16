@@ -1,4 +1,4 @@
-#include "main.h"
+#include "e_multicam/main.h"
 /* Geting Tegra Processor CHIP ID
 	for TX1 	= 33
 	for TX2 	= 24

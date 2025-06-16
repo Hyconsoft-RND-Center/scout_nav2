@@ -1,4 +1,4 @@
-#include "ros_publisher.h"
+#include "e_multicam/ros_publisher.h"
 
 PublisherContext *create_publisher(int argc, const char *const argv[], const char *node_name, const char *topic_name)
 {
