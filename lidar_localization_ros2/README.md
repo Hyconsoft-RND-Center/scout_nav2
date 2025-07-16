@@ -12,14 +12,14 @@ Green: path, Red: map
 
 ## IO
 - input  
-/cloud  (sensor_msgs/PointCloud2)  
+/velodyne_points  (sensor_msgs/PointCloud2)  
 /map  (sensor_msgs/PointCloud2)  
-/initialpose (geometry_msgs/PoseStamed)(when `set_initial_pose` is false)  
+/initialpose (geometry_msgs/PoseWithCovarianceStamped)(when `set_initial_pose` is false)  
 /odom (nav_msgs/Odometry)(optional)   
 /imu  (sensor_msgs/Imu)(optional)  
 
 - output  
-/pcl_pose (geometry_msgs/PoseStamped)  
+/pcl_pose (geometry_msgs/PoseWithCovarianceStamped)  
 /path (nav_msgs/Path)  
 /initial_map (sensor_msgs/PointCloud2)(when `use_pcd_map` is true)  
 
@@ -70,3 +70,44 @@ ros2 bag play tc_2017-10-15-15-34-02_free_download/
 
 Green: path, Red: map  
 (the 5x5 grids in size of 50m × 50m)
+
+## Changes from Original pcl_localization_ros2
+
+### New Features
+- **Multi-threading Support**: Added NDT_OMP and GICP_OMP registration methods for improved performance
+- **Frame Transformation**: Added `convert_pose` functionality for transforming poses between different coordinate frames
+- **Registration Quality Control**: Added `score_threshold` parameter to validate registration quality
+- **TF Broadcasting Control**: Added `publish_tf` option to control transform publishing
+
+### Message Type Changes
+- **Input**: `geometry_msgs/PoseStamped` → `geometry_msgs/PoseWithCovarianceStamped` for `/initialpose`
+- **Output**: `geometry_msgs/PoseStamped` → `geometry_msgs/PoseWithCovarianceStamped` for `/pcl_pose`
+
+### Dependencies Added
+- **ndt_omp_ros2**: Required for NDT_OMP functionality
+- **OpenMP**: Added for multi-threading support
+- **tf2_sensor_msgs**: Added for sensor frame transformations
+
+### Parameter Optimizations
+- **NDT Resolution**: Improved from 3.0m to 0.5m for higher precision
+- **Voxel Leaf Size**: Reduced from 1.0m to 0.1m for finer detail processing
+- **Scan Max Range**: Extended from 100.0m to 120.0m
+- **Score Threshold**: Set to 1.0 for better registration validation
+
+### Launch Configuration Changes
+- **Topic Remapping**: Changed from `/points_raw` to `/velodyne_points`
+- **Frame Configuration**: Updated frame relationships from `odom` to `base_link`
+
+### New Parameters Added
+|Name|Type|Default|Description|
+|---|---|---|---|
+|publish_tf|bool|false|Whether to publish TF transforms|
+|convert_pose|bool|true|Whether to convert poses between frames|
+|score_threshold|double|1.0|Registration score threshold for quality validation|
+|ndt_num_threads|int|4|Number of threads for NDT_OMP processing|
+
+### RViz Configuration Updates
+- Added `PoseWithCovariance` visualization for pose uncertainty
+- Changed camera view from Orbit to TopDownOrtho
+- Updated topic configurations for new message types
+- Enhanced visualization settings for better debugging
