@@ -1,0 +1,42 @@
+<?xml version='1.0'?>
+<sdf version='1.7'>
+  <model name="height_map">
+    <link name="terrain">
+      <inertial>
+        <mass>42000</mass>
+        <inertia>
+          <ixx>0.0</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.0</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="terrain_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <heightmap>
+            <uri>model://height_map/height.png</uri>
+            <size>10 10 1</size>
+            <pos>0 0 0</pos>
+          </heightmap>
+        </geometry>
+      </collision>
+      <visual name="terrain_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <heightmap>
+            <uri>model://height_map/height.png</uri>
+            <size>10 10 2</size>
+            <texture>
+              <diffuse>model://height_map/PavingStone/PavingStones028_1K-JPG_Color.jpg</diffuse>
+              <normal>model://height_map/dummy_normal.png</normal>
+            </texture>
+          </heightmap>
+        </geometry>
+      </visual>
+    </link>
+    <static>1</static>
+  </model>
+</sdf>

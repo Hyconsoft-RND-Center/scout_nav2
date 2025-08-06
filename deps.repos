@@ -1,0 +1,12 @@
+repositories:
+  # Ground segmentation
+  url-kaist/patchwork-plusplus:
+    type: git
+    url: https://github.com/url-kaist/patchwork-plusplus
+    version: master
+
+  # YOLO for camera
+  Alpaca-zip/ultralytics_ros:
+    type: git
+    url: https://github.com/Alpaca-zip/ultralytics_ros
+    version: humble-devel

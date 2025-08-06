@@ -1,0 +1,18 @@
+<library path="navi_plugin">
+  <class type="navi_plugin::ClickedPointLoggerPanel"
+         base_class_type="rviz_common::Panel">
+    <description>Panel to log clicked points in RViz2</description>
+  </class>
+  <class type="navi_plugin::WaypointNavigatorPanel"
+         base_class_type="rviz_common::Panel">
+    <description>Panel to send navigation commands to Nav2 from waypoints</description>
+  </class>
+  <class type="navi_plugin::Pose2DTool"
+         base_class_type="rviz_common::Tool">
+    <description>Click to publish a 2D pose (x,y,yaw)</description>
+  </class>
+  <class type="navi_plugin::ClickedPoseLoggerPanel"
+         base_class_type="rviz_common::Panel">
+    <description>Panel to log clicked poses in RViz2</description>
+  </class>
+</library>

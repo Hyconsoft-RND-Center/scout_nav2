@@ -1,0 +1,677 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="scout_bot">
+
+  <xacro:arg name="controllers_yaml_path" default="" />
+  <xacro:macro name="no_shiny_visual" params="filename scale">
+    <visual>
+      <geometry>
+        <mesh filename="${filename}" scale="${scale}" />
+      </geometry>
+      <cast_shadows>false</cast_shadows>
+      <material name="no_shadow">
+        <specular>0 0 0 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+  </xacro:macro>
+  <xacro:property name="wheel_width" value="0.08" />
+  <xacro:property name="wheel_radius" value="0.165" />
+  <xacro:property name="body_height" value="0.15" />
+  <xacro:property name="body_width" value="0.498" />
+  <xacro:property name="body_length" value="0.93" />
+
+  <!-- 스펙 시트 기준 로봇 몸무게는 67kg, 단 센서나 운반을 위한 프레임 부분은 제외, 해당 부분은 무게 정보 없음!
+    몸체 무게 및 각 바퀴의 무게 정보는 탐색 필요
+    프레임 부분의 무게 측량? 또는 예측 필요 
+  -->
+  
+  <xacro:property name="body_weight" value="57.0" /> <!--47-->
+  <xacro:property name="wheel_weight" value="3.0" />
+  <xacro:property name="frame_weight" value="10.0" />
+
+  <!-- sensor spec -->
+  <!-- the topic name is not used in this file, but Gazebo. The topic name used in gazebo is configured at scout_bridge.yaml file -->
+  <!-- LiDAR spec -->                                         <!-- Our Ouster OS1-32 spec -->
+  <xacro:property name="lidar_update_rate" value="10" />
+  <xacro:property name="max_lidar_range" value="35.0" />      <!-- 90 -->
+  <xacro:property name="min_lidar_range" value="0.3" />
+  <xacro:property name="max_lidar_angle" value="2.35619" />      
+  <xacro:property name="min_lidar_angle" value="-2.35619" />
+  <xacro:property name="lidar_horizonal_rays" value="128" /> <!-- 1024 -->
+  <xacro:property name="lidar_vertical_rays" value="16" />    <!-- 32  -->
+  <xacro:property name="lidar_frame_id" value="'os_sensor'" />
+  <xacro:property name="lidar_topic" value="'/ouster'" />
+
+  <!-- IMU spec -->
+  <xacro:property name="imu_update_rate" value="100" />
+  <xacro:property name="imu_frame_id" value="'imu_link'" />
+  <xacro:property name="imu_topic" value="'/imu/out'" />
+
+  <!-- Ultrasonic spec -->
+  <xacro:property name="ultrasonic_update_rate" value="100" />
+  <xacro:property name="ultrasonic_max_range" value="4.8" />
+  <xacro:property name="ultrasonic_min_range" value="0.2" />
+
+  <xacro:property name="right_ultrasonic_frame_id" value="'S1'" />
+  <xacro:property name="left_ultrasonic_frame_id" value="'S2'" />
+  <xacro:property name="rear_left_ultrasonic_frame_id" value="'S3'" />
+  <xacro:property name="rear_right_ultrasonic_frame_id" value="'S4'" />
+  <xacro:property name="right_ultrasonic_topic" value="'/'" />
+  <xacro:property name="left_ultrasonic_topic" value="''" />
+  <xacro:property name="rear_left_ultrasonic_topic" value="''" />
+  <xacro:property name="rear_right_ultrasonic_topic" value="''" />
+
+  <!-- GNSS spec -->
+  <xacro:property name="gnss_update_rate" value="5.0" />
+  <xacro:property name="gnss_latitude" value="37.4220"/>
+  <xacro:property name="gnss_longitude" value="127.0838"/>
+  <!-- <xacro:property name="gnss_altitude" value=""/> -->
+  <xacro:property name="gnss_velocity_sensing" value="true"/>
+  <xacro:property name="gnss1_frame_id" value="gnss1"/>
+  <xacro:property name="gnss2_frame_id" value="gnss2"/>
+
+  <!-- Camera spec -->
+  <xacro:property name="camera_update_rate" value="30" />
+  <!-- <xacro:property name="camera_normal_fov" value="1.72264" /> -->
+  <xacro:property name="camera_normal_fov" value="0.947" />
+  <xacro:property name="camera_wide_fov" value="2.247"/>
+  <xacro:property name="camera_width" value="1920" />
+  <xacro:property name="camera_height" value="1536" />
+
+  <xacro:property name="camera_Cam1_name" value="'front_camera'" />  <!-- front -->
+  <xacro:property name="camera_cam1_topic" value="'/Cam1_front_camera/image_raw'" />
+  <xacro:property name="camera_Cam1_frame_id" value="'Cam1'" />  
+  
+  <xacro:property name="camera_Cam2_name" value="'right_camera'" />  <!-- right -->
+  <xacro:property name="camera_cam2_topic" value="'/Cam2_right_camera/image_raw'" />
+  <xacro:property name="camera_Cam2_frame_id" value="'Cam2'" />  
+
+  <xacro:property name="camera_Cam3_name" value="'left_camera'" />  <!-- left -->
+  <xacro:property name="camera_cam3_topic" value="'/Cam3_left_camera/image_raw'" />
+  <xacro:property name="camera_Cam3_frame_id" value="'Cam3'" />  
+
+  <xacro:property name="camera_Cam4_name" value="'rear_camera'" />  <!-- rear -->
+  <xacro:property name="camera_cam4_topic" value="'/Cam4_rear_camera/image_raw'" />
+  <xacro:property name="camera_Cam4_frame_id" value="'Cam4" />  
+  
+
+  <material name="no_shine">
+    <color rgba="0.3 0.3 0.3 1.0"/>
+  </material>
+
+  <material name="Black">
+    <color rgba="0.00392156862745098 0.00392156862745098 0.00392156862745098 1.0" />
+  </material>
+  <material name="dark_grey">
+    <color rgba="0.2 0.2 0.2 1.0" />
+  </material>
+
+  <xacro:property name="pi" value="3.1415926535897931"/>
+  
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/base_link.dae" scale="1 1 1" />
+      </geometry>
+      <cast_shadows>false</cast_shadows>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.08" />
+      <geometry>
+        <box size="0.925 0.38 0.21"/>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/base_link.dae" scale="1 1 1"/> -->
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.034999999999999996"/>
+      <geometry>
+        <box size="0.15416666666666667 0.627 0.06999999999999999"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="base_footprint" />
+  <joint name="base_footprint_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.23479" />
+    <parent link="base_link" />
+    <child link="base_footprint" />
+  </joint>
+  <link name="inertial_link">
+    <inertial>
+      <mass value="${body_weight}"/>
+      <origin xyz="0.0 0.0 0.0" />
+      <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465" />
+    </inertial>
+  </link>
+  <joint name="inertial_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <parent link="base_link" />
+    <child link="inertial_link" />
+  </joint>
+  <link name="front_right_wheel_link">
+    <inertial>
+      <mass value="${wheel_weight}" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae" />
+      </geometry>
+      <cast_shadows>false</cast_shadows>
+    </visual>
+    <collision>
+      <origin rpy="${pi/2} 0 0" xyz="0 0 0" /> 
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="front_right_wheel_link" />
+    <origin rpy="0 0 0" xyz="0.249 -0.29153 -0.0702" />
+    <axis rpy="0 0 0" xyz="0 1 0" />
+  </joint>
+  <link name="front_left_wheel_link">
+    <inertial>
+      <mass value="${wheel_weight}" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171" />
+    </inertial>
+    <visual>
+      <origin rpy="0 ${pi} 0" xyz="0 0 0" /> 
+      <geometry>
+         <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae" />
+      </geometry>
+      <cast_shadows>false</cast_shadows>
+    </visual>
+    <collision>
+      <!-- <origin rpy="0 3.14159 0" xyz="0 0 0" /> --> <!-- For using geometry in DAE -->
+      <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae" /> -->
+        <cylinder radius="${wheel_radius}" length="${wheel_width}" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="front_left_wheel_link" />
+    <origin rpy="0 0 0" xyz="0.249 0.29153 -0.0702" />
+    <axis rpy="0 0 0" xyz="0 1 0" />
+  </joint>
+  <link name="rear_left_wheel_link">
+    <inertial>
+      <mass value="${wheel_weight}" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae" />
+      </geometry>
+    <cast_shadows>false</cast_shadows>
+    </visual>
+    <collision>
+      <origin rpy="1.570795 0 0" xyz="0 0 0" />
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="rear_left_wheel_link" />
+    <origin rpy="0 0 0" xyz="-0.249 0.29153 -0.0702" />
+    <axis rpy="0 0 0" xyz="0 1 0" />
+  </joint>
+  <link name="rear_right_wheel_link">
+    <inertial>
+      <mass value="${wheel_weight}" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae" />
+      </geometry>
+    <cast_shadows>false</cast_shadows>
+    </visual>
+    <collision>
+      <!-- <origin rpy="${pi} 0" xyz="0 0 0" /> --> <!-- For using geometry in DAE -->
+      <origin rpy="${pi/2} 0 0" xyz="0 0 0" />
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae"/> -->
+        <cylinder radius="${wheel_radius}" length="${wheel_width}" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_right_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="rear_right_wheel_link" />
+    <origin rpy="0 0 0" xyz="-0.249 -0.29153 -0.0702" />
+    <axis rpy="0 0 0" xyz="0 1 0" />
+  </joint>
+  
+  <link name="main_frame_link">
+    <!-- Frame 부분 크기 측량 및 추가 필요 -->
+    <!-- <inertial>
+      <mass value="10"/> 
+    </inertial> -->
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/Frame.stl" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/Frame.stl" /> -->
+      </geometry>
+    </collision>
+  </link>
+  <joint name="main_frame_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="main_frame_link" />
+    <origin rpy="0 0 0" xyz="0 0 0.1349" />
+  </joint>
+
+  <link name="os_sensor">
+  </link>
+  <gazebo reference="os_sensor">
+    <sensor name="lidar_3d" type="gpu_lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>${lidar_update_rate}</update_rate>
+      <ignition_frame_id>${lidar_frame_id}</ignition_frame_id>
+      <topic>${lidar_topic}</topic>
+
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>${lidar_horizonal_rays}</samples> 
+            <resolution>1</resolution>
+            <min_angle>${min_lidar_angle}</min_angle>
+            <max_angle>${max_lidar_angle}</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>${lidar_vertical_rays}</samples> 
+            <resolution>1</resolution>
+            <min_angle>-0.2617993877991494</min_angle>
+            <max_angle>0.2617993877991494</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>${min_lidar_range}</min>
+          <max>${max_lidar_range}</max>
+          <resolution>0.001</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.003</stddev>
+        </noise>
+      </ray>
+    </sensor>
+  </gazebo>
+  
+  <joint name="os_sensor_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="os_sensor" />
+    <origin rpy="-0.0022 -0.0125 0.0015" xyz="0.5421 0.0020 0.3855" />
+  </joint>
+
+  <link name="imu_link" />
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0 0 0.01" rpy="0 0 0" />
+  </joint>
+  <gazebo reference="imu_link">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>${imu_update_rate}</update_rate>
+      <visualize>true</visualize>
+      <ignition_frame_id>${imu_frame_id}</ignition_frame_id>
+      <topic>${imu_topic}</topic> 
+      
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+  
+  <link name="S2" />
+  <joint name="S2_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S2" />
+    <origin rpy="0 0 ${pi/2}" xyz="0 0.3 0.364" />
+  </joint>
+  
+  <link name="S1" />
+  <joint name="S1_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S1" />
+    <origin rpy="0 0 -${pi/2}" xyz="0 -0.3 0.364" />
+  </joint>
+  
+  <link name="S3" />
+  <joint name="S3_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S3" />
+    <origin rpy="0 0 -${pi}" xyz="-0.400 0.120 0.364" />
+  </joint>
+  
+  <link name="S4" />
+  <joint name="S4_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S4" />
+    <origin rpy="0 0 -${pi}" xyz="-0.400 -0.120 0.364" />
+  </joint>
+
+  <link name="Cam1" />
+  <joint name="Cam1_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam1" />
+    <origin rpy="0 0 0" xyz="0.575 0 0.0945" />
+  </joint>
+  
+  <link name="Cam2" />
+  <joint name="Cam2_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam2" />
+    <origin rpy="0 0 ${pi/2}" xyz="0 0.303 0.1815" />
+  </joint>
+  
+  <link name="Cam3" />
+  <joint name="Cam3_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam3" />
+    <origin rpy="0 0 -${pi/2}" xyz="0 -0.303 0.1815" />
+  </joint>
+  
+  <link name="Cam4" />
+  <joint name="Cam4_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam4" />
+    <origin rpy="0 0 -${pi}" xyz="-0.403 0 0.1295" />
+  </joint>
+  
+  <!-- horizontal_fov = 2 * atan(0.5 * width / focal_length -->
+  <gazebo reference="Cam1">
+    <sensor name="${camera_Cam1_name}" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>${camera_update_rate}</update_rate>
+      <visualize>true</visualize>
+      <ignition_frame_id>${camera_Cam1_name}</ignition_frame_id>
+      <topic>${camera_cam1_topic}</topic>
+      <camera>
+        <horizontal_fov>${camera_normal_fov}</horizontal_fov>
+        <image>
+          <width>${camera_width}</width>
+          <height>${camera_height}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.01</near>
+          <far>100.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="Cam2">
+    <sensor name="${camera_Cam2_name}" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>${camera_update_rate}</update_rate>
+      <visualize>true</visualize>
+      <ignition_frame_id>${camera_Cam2_name}</ignition_frame_id>
+      <topic>${camera_cam2_topic}</topic>
+      <camera>
+        <horizontal_fov>${camera_wide_fov}</horizontal_fov>
+        <image>
+          <width>${camera_width}</width>
+          <height>${camera_height}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.01</near>
+          <far>100.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="Cam3">
+    <sensor name="${camera_Cam3_name}" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>${camera_update_rate}</update_rate>
+      <visualize>true</visualize>
+      <ignition_frame_id>${camera_Cam3_name}</ignition_frame_id>
+      <topic>${camera_cam3_topic}</topic>
+      <camera>
+        <horizontal_fov>${camera_wide_fov}</horizontal_fov>
+        <image>
+          <width>${camera_width}</width>
+          <height>${camera_height}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.01</near>
+          <far>100.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="Cam4">
+    <sensor name="${camera_Cam4_name}" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>${camera_update_rate}</update_rate>
+      <visualize>true</visualize>
+      <ignition_frame_id>${camera_Cam4_name}</ignition_frame_id>
+      <topic>${camera_cam4_topic}</topic>
+      <camera>
+        <horizontal_fov>${camera_normal_fov}</horizontal_fov>
+        <image>
+          <width>${camera_width}</width>
+          <height>${camera_height}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.01</near>
+          <far>100.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+
+  <!-- GNSS Sensor -->
+  <!-- <sensor name="gnss_sensor" type="gps">
+    <pose>0 0 1 0 0 0</pose> 
+    <update_rate>5.0</update_rate>
+    <gps>
+      <position_sensing>
+        <horizontal_position_noise>0.1</horizontal_position_noise>
+        <vertical_position_noise>0.1</vertical_position_noise>
+      </position_sensing>
+      <velocity_sensing>
+        <horizontal_velocity_noise>0.1</horizontal_velocity_noise>
+        <vertical_velocity_noise>0.1</vertical_velocity_noise>
+      </velocity_sensing>
+    </gps>
+  </sensor> -->
+
+  <link name="gnss1_link" />
+  <joint name="gnss1_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="gnss1_link" />
+    <origin rpy="0 0 0" xyz="0.454046 0.354046 0.1" />
+  </joint>
+
+  <gazebo reference="gnss1_link">
+    <sensor name="gnss1" type="navsat">
+      <always_on>true</always_on>
+      <update_rate>${gnss_update_rate}</update_rate>
+      <ignition_frame_id>${gnss1_frame_id}</ignition_frame_id>
+      <position_sensing>
+        <reference_latitude>${gnss_latitude}</reference_latitude>
+        <reference_longitude>${gnss_longitude}</reference_longitude>
+      </position_sensing>
+    </sensor>
+  </gazebo>
+
+  <link name="gnss2_link" />
+  <joint name="gnss2_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="gnss2_link" />
+    <origin rpy="0 0 0" xyz="-0.454046 -0.354046 0.1" />
+  </joint>
+
+  <gazebo reference="gnss2_link">
+    <sensor name="gnss2" type="navsat">
+      <always_on>true</always_on>
+      <update_rate>${gnss_update_rate}</update_rate>
+      <ignition_frame_id>${gnss2_frame_id}</ignition_frame_id>
+      <position_sensing>
+        <reference_latitude>${gnss_latitude}</reference_latitude>
+        <reference_longitude>${gnss_longitude}</reference_longitude>
+      </position_sensing>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+      <parameters>$(arg controllers_yaml_path)</parameters>
+      <ros>
+        <remapping>~/cmd_vel_unstamped:=/cmd_vel</remapping>
+      </ros>
+    </plugin>     
+  </gazebo>  
+
+    <!--Wheel Slip -->
+    <!-- 전/후륜에 무게가 다르게 들어갈 것 같으면 wheel normal force를 조정 -->
+    <!-- 전륜 160, 후륜 170 권장 -->
+    <gazebo>
+     <plugin filename="libignition-gazebo-wheel-slip-system.so" name="ignition::gazebo::systems::WheelSlip">
+      <wheel link_name="front_left_wheel_link">
+        <slip_compliance_lateral>0</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.1</slip_compliance_longitudinal>
+        <wheel_normal_force>165</wheel_normal_force>
+        <wheel_radius>${wheel_radius}</wheel_radius>
+      </wheel>
+      <wheel link_name="front_right_wheel_link">
+        <slip_compliance_lateral>0</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.1</slip_compliance_longitudinal>
+        <wheel_normal_force>165</wheel_normal_force>
+        <wheel_radius>${wheel_radius}</wheel_radius>
+      </wheel>
+      <wheel link_name="rear_left_wheel_link">
+        <slip_compliance_lateral>0</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.1</slip_compliance_longitudinal>
+        <wheel_normal_force>165</wheel_normal_force>
+        <wheel_radius>${wheel_radius}</wheel_radius>
+      </wheel>
+      <wheel link_name="rear_right_wheel_link">
+        <slip_compliance_lateral>0</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.1</slip_compliance_longitudinal>
+        <wheel_normal_force>165</wheel_normal_force>
+        <wheel_radius>${wheel_radius}</wheel_radius>
+      </wheel>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin filename="libignition-gazebo-pose-publisher-system.so" name="ignition::gazebo::systems::PosePublisher">
+      <publish_link_pose>true</publish_link_pose>
+      <publish_nested_model_pose>true</publish_nested_model_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <update_frequency>50</update_frequency>
+    </plugin>
+  </gazebo>
+
+  <ros2_control name="scout_bot" type="system">
+    <hardware>
+      <plugin>ign_ros2_control/IgnitionSystem</plugin>
+    </hardware> 
+
+    <joint name="front_left_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="rear_left_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="front_right_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="rear_right_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
+</robot>
