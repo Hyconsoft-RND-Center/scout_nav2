@@ -48,4 +48,31 @@ source ~/sensor_ws/install/setup.bash
 ros2 launch ouster_ros driver.launch.py
 ```
 
-Launch
+Launch Localization package
+
+```bash
+ros2 launch lidar_localization_ros2 lidar_localization.launch.py
+```
+
+Launch Navigation 2 packages
+
+```bash
+source ~/scout_ws/install/setup.bash
+ros2 launch nav2_bringup navigation_launch.py params_file:=/home/scout/scout_ws/src/scout_nav2/scout_bot_description/config/nav2_param.yaml map_file:=/home/scout/scout_ws/lobby_tv.yaml
+```
+
+Run Navigation 2 map_server (We will merge it to a new launch file someday)
+
+```bash
+ros2 run nav2_map_server map_server --ros-args -p map_file:=/home/scout/scout_ws/src/scout_nav2/lobby_tv.yaml
+```
+
+After run the map server you need to set lifecycle
+
+In other terminal
+
+```bash
+ros2 lifecycle set /map_server configure
+
+ros2 lifecycle set /map_server activate
+```
