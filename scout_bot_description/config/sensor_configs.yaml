@@ -1,0 +1,14 @@
+# Deifinition for Ultrasonic sensor node
+obstacle_detector_node:
+  ros__parameters:
+    max_detection_distance: 0.7
+    max_sensor_range: 5.0
+    min_sensor_range: 0.2
+    ultrasonic_sensor_topics:
+      left: /ultrasonic_sensor_1
+      right: /ultrasonic_sensor_2
+      rear_left: /ultrasonic_sensor_3
+      rear_right: /ultrasonic_sensor_4
+    publish_topics:
+      rear: /is_rear_obstacle
+      side: /is_side_obstacle

@@ -1,0 +1,454 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="scout_bot">
+  
+  <xacro:arg name="controllers_yaml_path" default="" />
+
+  <xacro:property name="wheel_width" value="0.08" />
+  <xacro:property name="wheel_radius" value="0.165" />
+  <xacro:property name="body_height" value="0.15" />
+  <xacro:property name="body_width" value="0.498" />
+  <xacro:property name="body_length" value="0.93" />
+
+  <!-- 스펙 시트 기준 로봇 몸무게는 67kg, 단 센서나 운반을 위한 프레임 부분은 제외, 해당 부분은 무게 정보 없음!
+    몸체 무게 및 각 바퀴의 무게 정보는 탐색 필요
+    프레임 부분의 무게 측량? 또는 예측 필요 
+  -->
+  
+  <xacro:property name="body_weight" value="57.0" /> <!--47-->
+  <xacro:property name="wheel_weight" value="3.0" />
+  <xacro:property name="frame_weight" value="10.0" />
+
+  <!-- sensor spec -->
+  <!-- LiDAR spec -->
+  <xacro:property name="lidar_update_rate" value="10" />
+  <xacro:property name="max_lidar_range" value="35.0" />
+  <xacro:property name="min_lidar_range" value="0.3" />
+  <xacro:property name="lidar_horizonal_rays" value="32" />
+  <xacro:property name="lidar_vertical_rays" value="1024" />
+  <xacro:property name="lidar_frame_id" value="'os_sensor'" />
+  <xacro:property name="lidar_topic" value="'/points_raw'" />
+
+  <!-- IMU spec -->
+  <xacro:property name="imu_update_rate" value="100" />
+  <xacro:property name="imu_frame_id" value="'imu_link'" />
+  <xacro:property name="imu_topic" value="'/imu/out'" />
+
+  <!-- Ultrasonic spec -->
+  <!-- TBW -->
+
+  <!-- GNSS spec -->
+  <!-- TBW -->
+
+  <material name="no_shine">
+    <color rgba="0.3 0.3 0.3 1.0"/>
+  </material>
+
+  <material name="Black">
+    <color rgba="0.00392156862745098 0.00392156862745098 0.00392156862745098 1.0" />
+  </material>
+
+  <!-- Base link -->
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/base_link.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.008"/>
+      <geometry>
+        <box size="0.925 0.38 0.21"/>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/base_link.dae" scale="1 1 1"/> -->
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.034999999999999996"/>
+      <geometry>
+        <box size="0.15416666666666667 0.627 0.06999999999999999"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="base_footprint"/>
+  <joint name="base_footprint_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.23479"/>
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+  </joint>
+  <link name="inertial_link">
+    <inertial>
+      <mass value="40"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465"/>
+    </inertial>
+  </link>
+  <joint name="inertial_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="inertial_link"/>
+  </joint>
+  <link name="front_right_wheel_link">
+    <inertial>
+      <mass value="3.0"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae" />
+      </geometry>
+    </visual>
+    <collision>
+      <!-- <origin rpy="0 3.14159 0" xyz="0 0 0" /> --> <!-- For using geometry in DAE -->
+      <origin rpy="1.57079 0 0" xyz="0 0 0"/> 
+      <geometry>        
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae" /> -->
+        <cylinder radius="0.165" length="0.08" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="front_right_wheel_link"/>
+    <origin rpy="0 0 0" xyz="0.249 -0.29153 -0.0702"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+  </joint>
+  <link name="front_left_wheel_link">
+    <inertial>
+      <mass value="3"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171"/>
+    </inertial>
+    <visual>
+      <origin rpy="3.14159 0 0" xyz="0 0 0"/> 
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <!-- <origin rpy="0 3.14159 0" xyz="0 0 0"/> --> <!-- for using DAE in collision -->
+      <origin rpy="1.57079 0 0" xyz="0 0 0"/>
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae"/> -->
+        <cylinder radius="0.165" length="0.08" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="front_left_wheel_link"/>
+    <origin rpy="0 0 0" xyz="0.249 0.29153 -0.0702"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+  </joint>
+  <link name="rear_left_wheel_link">
+    <inertial>
+      <mass value="3"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <!-- <origin rpy="0 0 0" xyz="0 0 0"/> --> <!-- For using gemetry DAE-->
+       <origin rpy="1.57079 0 0" xyz="0 0 0" />
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type1.dae"/> -->
+        <cylinder radius="0.165" length="0.08" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rear_left_wheel_link"/>
+    <origin rpy="0 0 0" xyz="-0.249 0.29153 -0.0702"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+  </joint>
+  <link name="rear_right_wheel_link">
+    <inertial>
+      <mass value="3"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.7171" ixy="0" ixz="0" iyy="0.1361" iyz="0" izz="0.7171"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <!-- <origin rpy="0 0 0" xyz="0 0 0"/>  --> <!-- For using DAE in collision -->
+      <origin rpy="1.57079 0 0" xyz="0 0 0" />
+      <geometry>
+        <!-- <mesh filename="package://scout_bot_description/meshes/include/wheel_type2.dae"/> -->
+        <cylinder radius="0.165" length="0.08" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rear_right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rear_right_wheel_link"/>
+    <origin rpy="0 0 0" xyz="-0.249 -0.29153 -0.0702"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+  </joint>
+
+  <!-- Frame -->
+  <link name="main_frame_link">
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <mesh filename="package://scout_bot_description/meshes/include/Frame.stl" />
+    </geometry>
+  </visual>
+  <!-- <collision>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <mesh filename="package://scout_bot_description/meshes/include/Frame.stl" />
+    </geometry>
+  </collision> -->
+  </link>
+
+  <joint name="main_frame_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="main_frame_link" />
+    <origin xyz="0 0 0.1349" rpy="0 0 0" />
+  </joint>
+  
+  <!-- Ouster -->
+  <link name="lidar_link"/>=
+  <gazebo reference="lidar_link">
+    <sensor name="lidar_3d" type="ray">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>1024</samples> <!-- ray 수가 많으면 성능 문제가 생길 수 있음 -->
+            <resolution>1</resolution>
+            <min_angle>-3.141592653589793</min_angle>
+            <max_angle>3.141592653589793</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>32</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.2617993877991494</min_angle>
+            <max_angle>0.2617993877991494</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>35.0</min>
+          <max>0.3</max>
+          <resolution>0.001</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0</stddev>
+        </noise>
+      </ray>
+
+      <plugin filename="libgazebo_ros_velodyne_laser.so" name="gazebo_ros_laser_controller">
+        <topicName>/points_raw</topicName>
+        <min_range>35.0</min_range>
+        <max_range>0.3</max_range>
+        <gaussianNoise>0.008</gaussianNoise>
+      </plugin>
+    </sensor>
+  </gazebo>
+  
+  <joint name="os_sensor_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="lidar_link" />
+    <origin xyz="0.5421 0.0020 0.3855" rpy="-0.0022 -0.0125 0.0015" />
+  </joint>
+  
+  <link name="imu_link" />
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0 0 0.01" rpy="0 0 0" />
+  </joint>
+  <gazebo reference="imu_link">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <frame_id>imu_link</frame_id>
+      <topic>/imu/out</topic> 
+      
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>2e-4</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.7e-2</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <!-- Sonar 1 (right) -->
+  <link name="S2"/>
+  
+  <joint name="S2_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S2" />
+    <origin xyz="0 0.3 0.364" rpy="0 0 1.57079" />
+  </joint>
+  
+  <!-- Sonar 2 (left) -->
+  <link name="S1"/>
+  
+  <joint name="S1_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S1" />
+    <origin xyz="0 -0.3 0.364" rpy="0 0 -1.57079" />
+  </joint>
+  
+  <!-- Sonar 3 -->
+  <link name="S3"/>
+  
+  <joint name="S3_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S3" />
+    <origin xyz="-0.400 0.120 0.364" rpy="0 0 -3.14159" />
+  </joint>
+  
+  <!-- Sonar 4 -->
+  <link name="S4"/>
+  
+  <joint name="S4_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="S4" />
+    <origin xyz="-0.400 -0.120 0.364" rpy="0 0 -3.14159" />
+  </joint>
+  
+  
+  <!-- Camera 1 -->
+  <link name="Cam1"/>
+  
+  <joint name="Cam1_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam1" />
+    <origin xyz="0.575 0 0.0945" rpy="0 0 0" />
+  </joint>
+  
+  <!-- Camera 2 -->
+  <link name="Cam2"/>
+  
+  <joint name="Cam2_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam2" />
+    <origin xyz="0 0.303 0.1815" rpy="0 0 1.57079" />
+  </joint>
+  
+  <!-- Camera 3 -->
+  <link name="Cam3"/>
+  
+  <joint name="Cam3_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam3" />
+    <origin xyz="0 -0.303 0.1815" rpy="0 0 -1.57079" />
+  </joint>
+  
+  <!-- Camera 4 -->
+  <link name="Cam4"/>
+  
+  <joint name="Cam4_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="Cam4" />
+    <origin xyz="-0.403 0 0.1295" rpy="0 0 -3.14159" />
+  </joint>
+
+
+  <!-- diff_driving setting -->
+  <gazebo>
+    <plugin filename="libgazebo_ros_diff_drive.so" name="diff_drive">
+      <ros>
+        <!-- Set namespace -->
+        <!-- <namespace>/demo</namespace> -->
+        <!-- Remap default topics -->
+        <!-- <remapping>cmd_vel:=cmd_demo</remapeping> -->
+        <!-- <remapping>odom:=odom_demo</remapping> -->
+      </ros>
+      <!-- Update rate -->
+      <update_rate>50</update_rate>
+      <!-- Number of wheel pairs -->
+      <num_wheel_pairs>2</num_wheel_pairs>
+      <!-- wheels0 -->
+       
+      <left_joint>front_left_wheel_joint</left_joint>
+      <right_joint>front_right_wheel_joint</right_joint>
+      <!-- wheels1-->
+      <left_joint>rear_left_wheel_joint</left_joint>
+      <right_joint>rear_right_wheel_joint</right_joint>
+      <!-- kinematics -->
+      <wheel_separation>0.44</wheel_separation>
+      <wheel_separation>0.44</wheel_separation>
+      <wheel_diameter>0.2</wheel_diameter>
+      <wheel_diameter>0.2</wheel_diameter>
+      <!-- limits -->
+      <max_wheel_torque>4000</max_wheel_torque>
+      <max_wheel_acceleration>1.5</max_wheel_acceleration> 
+      <!-- output -->
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>   <!-- SLAM 시 true -->
+      <publish_wheel_tf>true</publish_wheel_tf> <!-- SLAM 시 true -->
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+    </plugin>
+  </gazebo>
+
+</robot>
