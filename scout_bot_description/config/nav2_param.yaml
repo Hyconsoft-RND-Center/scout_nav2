@@ -1,6 +1,6 @@
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: False
     enabled: false
     alpha1: 0.2
     alpha2: 0.2
@@ -52,7 +52,7 @@ amcl:
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odometry/filtered # /odometry/filtered
@@ -119,15 +119,15 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
 
 controller_server:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     controller_frequency: 10.0 # 20Hz 정도면 충분
     min_x_velocity_threshold: 0.01 # 너무 낮으면 정지판단 어려움
     min_y_velocity_threshold: 0.001 # diff_drive에서는 거의 의미 없음
@@ -233,7 +233,7 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      use_sim_time: true
+      use_sim_time: False
       global_frame: odom
       robot_base_frame: base_link
       footprint: "[[-0.6, -0.5], [-0.6, 0.4], [0.65, 0.5], [0.65, -0.4]]" # 로봇의 실제 크기를 반영
@@ -275,7 +275,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.5 # 1.5            
+        inflation_radius: 1.2 # 1.5            
         cost_scaling_factor: 1.5
 
       stvl_layer:
@@ -332,7 +332,7 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: True
+      use_sim_time: False
       transform_tolerance: 1.0 # 0.5
       robot_radius: 0.22
       #resolution: 0.05
@@ -363,7 +363,7 @@ global_costmap:
 
 map_server:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     # Overridden in launch by the "map" launch configuration or provided default value.
     # To use in yaml, remove the default "map" value in the tb3_simulation_launch.py file & provide full path to map below.
     yaml_filename: ""
@@ -372,7 +372,7 @@ map_server:
   #2D pgm 맵에 해당하는 yaml 파일을 불러올 것
 map_saver:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     save_map_timeout: 5.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
@@ -381,7 +381,7 @@ map_saver:
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
-    use_sim_time: True
+    use_sim_time: False
 
     planner_plugins: ["GridBased"]
 
@@ -435,7 +435,7 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -467,7 +467,7 @@ behavior_server:
     global_frame: map # map # odom
     robot_base_frame: base_link
     transform_tolerance: 1.0 # 0.2
-    use_sim_time: true
+    use_sim_time: False
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
@@ -475,11 +475,11 @@ behavior_server:
 
 robot_state_publisher:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
 
 waypoint_follower:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -490,7 +490,7 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
@@ -505,7 +505,7 @@ velocity_smoother:
 
 collision_monitor:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False
     base_frame_id: "base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"  # cmd_vel_raw # collision_monitor가 입력 받을 토픽, controller_server 또는 velocity smoother에서 발행
@@ -545,15 +545,15 @@ collision_monitor:
       type: "polygon"
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 5 # 2.0
+      time_before_collision: 1.0 # 2.0
       simulation_time_step: 0.1  # 0.1
       max_points: 5 # 5 
       visualize: true
       polygon_pub_topic: "polygon_approach"
       enabled: true
-    observation_sources: pointcloud
+    observation_sources: ["pointcloud"]
     pointcloud:
-      type: "PointCloud2"
+      type: "pointcloud"
       topic: "/ouster/points"
       min_height: 0.1
       max_height: 1.2
