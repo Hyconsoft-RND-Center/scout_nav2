@@ -27,6 +27,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description() -> LaunchDescription:
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
+    scout_dir = get_package_share_directory('scout_bot_description')
 
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -54,7 +55,10 @@ def generate_launch_description() -> LaunchDescription:
     ]
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static'),
+                    ('/odom', '/odometry/filtered'),
+                    ('odom', '/odometry/filtered'),
+                ]
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {'autostart': autostart}
@@ -85,8 +89,8 @@ def generate_launch_description() -> LaunchDescription:
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
         # default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
+        default_value=os.path.join(scout_dir, 'config', 'nav2_param.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes',
     )
 
@@ -135,7 +139,6 @@ def generate_launch_description() -> LaunchDescription:
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
             ),
             Node(
                 package='nav2_smoother',
@@ -178,7 +181,6 @@ def generate_launch_description() -> LaunchDescription:
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
             ),
             Node(
                 package='nav2_bt_navigator',
@@ -212,7 +214,6 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings
-                + [('cmd_vel', 'cmd_vel_nav')],
             ),
             # Node(
             #     package='nav2_collision_monitor',
@@ -225,17 +226,17 @@ def generate_launch_description() -> LaunchDescription:
             #     arguments=['--ros-args', '--log-level', log_level],
             #     remappings=remappings,
             # ),
-            # Node(
-            #     package='opennav_docking',
-            #     executable='opennav_docking',
-            #     name='docking_server',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[configured_params],
-            #     arguments=['--ros-args', '--log-level', log_level],
-            #     remappings=remappings,
-            # ),
+            Node(
+                package='opennav_docking',
+                executable='opennav_docking',
+                name='docking_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings,
+            ),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
@@ -272,7 +273,6 @@ def generate_launch_description() -> LaunchDescription:
                         plugin='nav2_controller::ControllerServer',
                         name='controller_server',
                         parameters=[configured_params],
-                        remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
                     ),
                     ComposableNode(
                         package='nav2_smoother',
@@ -299,7 +299,6 @@ def generate_launch_description() -> LaunchDescription:
                         plugin='behavior_server::BehaviorServer',
                         name='behavior_server',
                         parameters=[configured_params],
-                        remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
                     ),
                     ComposableNode(
                         package='nav2_bt_navigator',
@@ -363,7 +362,7 @@ def generate_launch_description() -> LaunchDescription:
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_graph_file_cmd)
     ld.add_action(declare_use_composition_cmd)
-    # ld.add_action(declare_container_name_cmd)
+    ld.add_action(declare_container_name_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     # Add the actions to launch all of the navigation nodes
