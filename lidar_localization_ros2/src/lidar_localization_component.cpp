@@ -26,7 +26,7 @@ PCLLocalization::PCLLocalization(const rclcpp::NodeOptions & options)
   declare_parameter("set_initial_pose", false);
   declare_parameter("initial_pose_x", 0.0);
   declare_parameter("initial_pose_y", 0.0);
-  declare_parameter("initial_pose_z", 0.0);      enable_map_odom_tf: false
+  declare_parameter("initial_pose_z", 0.0);
   declare_parameter("initial_pose_qx", 0.0);
   declare_parameter("initial_pose_qy", 0.0);
   declare_parameter("initial_pose_qz", 0.0);
