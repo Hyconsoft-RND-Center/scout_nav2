@@ -70,9 +70,6 @@ void PoseMarkerPublisher::publishAllMarkers(
     arr.markers.push_back(makeSphere(h, poses[i], i+1000));
     arr.markers.push_back(makeText(h, poses[i], i+2000));
   }
-  if (poses.size()>1) {
-    arr.markers.push_back(makeLineStrip(h, poses));
-  }
   pub_->publish(arr);
 }
 
@@ -97,12 +94,6 @@ void PoseMarkerPublisher::updateDiff(
     arr.markers.push_back(makeArrow(hdr, newv[i], i));
     arr.markers.push_back(makeSphere(hdr, newv[i], 1000+i));
     arr.markers.push_back(makeText(hdr, newv[i], 2000+i));
-  }
-
-  // LineStrip 은 매 번 갱신
-  if (newv.size()>1) {
-    arr.markers.push_back(makeDeleteMarker(hdr, "waypoint_line", 3000));
-    arr.markers.push_back(makeLineStrip(hdr, newv));
   }
 
   pub_->publish(arr);
@@ -165,25 +156,6 @@ visualization_msgs::msg::Marker PoseMarkerPublisher::makeText(
   m.scale.z = 0.13;
   m.color.r = m.color.g = m.color.b = 1.0; m.color.a = 1.0;
   m.text    = std::to_string(id % 1000);
-  return m;
-}
-
-// Line strip marker
-visualization_msgs::msg::Marker PoseMarkerPublisher::makeLineStrip(
-  const std_msgs::msg::Header & header,
-  const std::vector<geometry_msgs::msg::Pose> & poses)
-{
-  visualization_msgs::msg::Marker m;
-  m.header = header;
-  m.ns     = "waypoint_line";
-  m.id     = 3000;
-  m.type   = m.LINE_STRIP;
-  m.action = m.ADD;
-  m.scale.x = 0.03;
-  m.color.b = 1.0; m.color.a = 1.0;
-  for (auto & p : poses) {
-    m.points.push_back(p.position);
-  }
   return m;
 }
 

@@ -61,10 +61,7 @@ private:
     const std_msgs::msg::Header& h,
     const geometry_msgs::msg::Pose& p,
     size_t id);
-  visualization_msgs::msg::Marker makeLineStrip(
-    const std_msgs::msg::Header& h,
-    const std::vector<geometry_msgs::msg::Pose>& poses);
-
+  
   // 헬퍼: quaternion → RPY, pose 비교
   std::tuple<double,double,double> extractRPY(
     const geometry_msgs::msg::Pose& p);

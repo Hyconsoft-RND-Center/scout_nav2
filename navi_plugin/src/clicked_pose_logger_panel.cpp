@@ -27,12 +27,16 @@ ClickedPoseLoggerPanel::ClickedPoseLoggerPanel(QWidget* parent)
     save_btn_ = new QPushButton("Save CSV", this);
     delete_last_btn_ = new QPushButton("Delete Last Pose", this);
     clear_btn_ = new QPushButton("Clear All Poses", this);  
+    preview_btn_ = new QPushButton("Preview Path", this);
+    clear_path_btn_ = new QPushButton("Clear Preview Path", this);
     
     connect(import_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onImportCsvClicked);
     connect(open_current_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onOpenCsvClicked);
     connect(save_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onSaveClicked);
     connect(delete_last_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onDeleteLastClicked);
     connect(clear_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onClearClicked);  
+    connect(preview_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onPreviewClicked);
+    connect(clear_path_btn_, &QPushButton::clicked, this, &ClickedPoseLoggerPanel::onClearPathClicked);
 
     auto* main_layout_ = new QVBoxLayout;
     main_layout_->addWidget(last_point_label_);
@@ -42,16 +46,20 @@ ClickedPoseLoggerPanel::ClickedPoseLoggerPanel(QWidget* parent)
     row_->addWidget(open_current_btn_);
     row_->addWidget(save_btn_);
     main_layout_->addLayout(row_);
-    main_layout_->addWidget(delete_last_btn_);
-    main_layout_->addWidget(clear_btn_);
+    auto* row2_ = new QHBoxLayout;
+    row2_->addWidget(clear_btn_);
+    row2_->addWidget(delete_last_btn_);
+    main_layout_->addLayout(row2_);
+    auto* row3_ = new QHBoxLayout;
+    row3_->addWidget(clear_path_btn_);
+    row3_->addWidget(preview_btn_);
+    main_layout_->addLayout(row3_);
 
     setLayout(main_layout_);
 }
 
 void ClickedPoseLoggerPanel::onInitialize()
 {
-  // …기존 UI/Node 초기화 코드…
-
   // CSV 파일 오픈 & 헤더 쓰기
   csv_file_.open(csv_path_, std::ios::out | std::ios::trunc);
     if (csv_file_.is_open()) {
@@ -71,43 +79,53 @@ void ClickedPoseLoggerPanel::onInitialize()
   waypoint_pub_ = node_->create_publisher<geometry_msgs::msg::PoseArray>(
     "/wayposes", 10);
 
+  // ComputePathThroughPoses 액션 클라이언트
+  planner_client_ = rclcpp_action::create_client<ComputePathThroughPoses>(
+      node_, "/compute_path_through_poses");
+
+  // Path 퍼블리셔
+  rclcpp::QoS viz_qos(1);
+  viz_qos.transient_local().reliable();
+  preview_pub_ = node_->create_publisher<nav_msgs::msg::Path>(
+    "/preview_path", viz_qos);
+
   // Qt 타이머로 spin_some()
   ros_spin_timer_ = new QTimer(this);
   connect(ros_spin_timer_, &QTimer::timeout, [this]() {
     rclcpp::spin_some(node_);
   });
-  ros_spin_timer_->start(100);
+  ros_spin_timer_->start(1000); // 1초마다 spin_some() 호출 = 1초 마다 rviz2 패널 업데이트
 }
 void ClickedPoseLoggerPanel::poseCallback(
   const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  // position
-  double x = msg->pose.position.x;
-  double y = msg->pose.position.y;
-  double z = msg->pose.position.z;
-
   // orientation → roll, pitch, yaw
   tf2::Quaternion q;
   tf2::fromMsg(msg->pose.orientation, q);
   double roll, pitch, yaw;
   tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
 
-  // 내부 벡터에 추가 & 퍼블리시
-  addPose(x, y, z, roll, pitch, yaw);
-
-  // UI 라벨 갱신
-  updateLabel();
-
-  // CSV에 한 줄 기록
-  if (csv_file_.is_open()) {
-    csv_file_ 
-      << x << "," << y << "," << z << ","
-      << roll << "," << pitch << "," << yaw << "\n";
-    csv_file_.flush();
-    RCLCPP_INFO(node_->get_logger(),
-      "Saved pose: (%.2f,%.2f,%.2f | r:%.2f p:%.2f y:%.2f)",
-      x, y, z, roll, pitch, yaw);
+  // PoseStamped 
+  geometry_msgs::msg::PoseStamped ps = *msg;
+  if (ps.header.frame_id.empty()) {
+    ps.header.frame_id = fixed_frame_; // 기본 프레임 ID 설정
   }
+  if (rclcpp::Time(ps.header.stamp).nanoseconds() == 0) {
+    ps.header.stamp = node_->now(); // 현재 시간으로 설정
+  }
+
+  // Quternion Standardization
+  {
+    tf2::Quaternion q; tf2::fromMsg(ps.pose.orientation, q);
+    if (q.length2() == 0) q.setRPY(0,0,0);
+    q.normalize();
+    ps.pose.orientation = tf2::toMsg(q);
+  }
+
+  poses_.push_back(ps);
+  publishPoses();
+  updateLabel();
+  flushCSV(); 
 }
 bool ClickedPoseLoggerPanel::saveFile(const std::string& file_path)
 {
@@ -119,22 +137,25 @@ bool ClickedPoseLoggerPanel::saveFile(const std::string& file_path)
 
   // 6컬럼 헤더
   out << "x,y,z,roll,pitch,yaw\n";
-  for (const auto& p : poses_) {
+  for (const auto& ps : poses_) {
+    const auto& p = ps.pose;
+    // Quaternion → RPY 변환
+    // tf2::Quaternion q = tf2::fromMsg(p.orientation);
+    // double roll, pitch, yaw;
+    // tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+    // CSV 포맷으로 출력
     tf2::Quaternion q(
       p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
     double r, pt, yw;
     tf2::Matrix3x3(q).getRPY(r, pt, yw);
-
     out
       << p.position.x << "," 
       << p.position.y << "," 
       << p.position.z << ","
-      << r           
-      << "," 
-      << pt          
-      << "," 
-      << yw          
-      << "\n";
+      << r            << "," 
+      << pt           << "," 
+      << yw           << "\n";
   }
   return true;
 }
@@ -165,20 +186,40 @@ bool ClickedPoseLoggerPanel::loadFile(const std::string& file_path)
   // 불러온 뒤 퍼블리시 & 라벨 업데이트
   publishPoses();
   updateLabel();
+  clearPreviewPath();
   return true;
 }
+
+void ClickedPoseLoggerPanel::flushCSV(){
+  if (!csv_file_.is_open()) return;
+  std::ofstream out(csv_path_, std::ios::out | std::ios::app);
+  if (!out) {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to flush CSV file");
+    return;
+  }
+  const auto& p = poses_.back().pose;
+  auto [roll, pitch, yaw] = extractRPY(p);
+  out << p.position.x << ',' << p.position.y << ',' << p.position.z << ','
+      << roll      << ',' << pitch          << ',' << yaw << '\n';
+  out.flush();
+}
+
 void ClickedPoseLoggerPanel::addPose(
   double x, double y, double z,
   double roll, double pitch, double yaw)
 {
-  geometry_msgs::msg::Pose p;
-  p.position.x = x;  p.position.y = y;  p.position.z = z;
-  tf2::Quaternion qq;
-  qq.setRPY(roll, pitch, yaw);
-  p.orientation = tf2::toMsg(qq);
-
-  poses_.push_back(p);
+  geometry_msgs::msg::PoseStamped ps;
+  ps.header.frame_id = fixed_frame_;
+  ps.header.stamp = node_->now();
+  tf2::Quaternion qq; qq.setRPY(roll, pitch, yaw); qq.normalize();
+  ps.pose.position.x = x;
+  ps.pose.position.y = y;
+  ps.pose.position.z = z;
+  ps.pose.orientation = tf2::toMsg(qq);
+  poses_.push_back(ps);
   publishPoses();
+  updateLabel();
+  flushCSV();
 }
 
 void ClickedPoseLoggerPanel::saveAllPosesToCSV()
@@ -188,7 +229,8 @@ void ClickedPoseLoggerPanel::saveAllPosesToCSV()
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(3);
 
-  for (const auto& p : poses_) {
+  for (const auto& ps : poses_) {
+    const auto& p = ps.pose;
     auto [roll, pitch, yaw] = extractRPY(p);
     oss << p.position.x << ',' << p.position.y << ',' << p.position.z << ','
         << roll      << ',' << pitch          << ',' << yaw << '\n';
@@ -209,7 +251,7 @@ void ClickedPoseLoggerPanel::updateLabel()
   }
 
   // 2) 가장 마지막 포즈 꺼내기
-  const auto& p = poses_.back();
+  const auto& p = poses_.back().pose;
 
   // 3) quaternion → roll, pitch, yaw 계산 (radian)
   tf2::Quaternion q;
@@ -356,19 +398,90 @@ void ClickedPoseLoggerPanel::onDeleteLastClicked()
         csv_file_.flush();
     }   
     RCLCPP_INFO(node_->get_logger(), "Deleted last pose");
-    }   
+  clearPreviewPath(); 
+}
+void ClickedPoseLoggerPanel::clearPreviewPath()
+{
+   if (!preview_pub_) return;
+  nav_msgs::msg::Path empty;
+  empty.header.frame_id = fixed_frame_;      
+  empty.header.stamp    = node_->now();
+  preview_pub_->publish(empty);                  // latched(=transient_local) 갱신
+  RCLCPP_INFO(node_->get_logger(), "Preview path cleared.");
+}
+
 void ClickedPoseLoggerPanel::publishPoses()
 {
     if (!waypoint_pub_) return;
     geometry_msgs::msg::PoseArray msg;
-    msg.header.frame_id = "map";  // 적절한 프레임 ID 설정
+    msg.header.frame_id = fixed_frame_;  // 적절한 프레임 ID 설정
     msg.header.stamp = node_->now();
-    msg.poses = poses_;  // 벡터의 Pose들을 그대로 할당
+    msg.poses.resize(poses_.size());  // 벡터의 Pose들을 그대로 할당
+    for (size_t i = 0; i < poses_.size(); ++i) {
+        msg.poses[i] = poses_[i].pose;  // PoseArray에 Pose들을 복사
+    }
+    // 퍼블리시
     waypoint_pub_->publish(msg);
     RCLCPP_INFO(node_->get_logger(), "Published %zu poses", poses_.size()); 
 }
 
-} // namespace navi_plugin
+void ClickedPoseLoggerPanel::onPreviewClicked() {
+  if (poses_.size() < 2 && !use_explicit_start_) {
+    QMessageBox::warning(this, "Plan", "Need at least 2 poses (start + goal) or set explicit start.");
+    return;
+  }
+  if (!planner_client_ || !planner_client_->wait_for_action_server(std::chrono::seconds(2))) {
+    QMessageBox::warning(this, "Plan", "Planner action server not available.");
+    return;
+  }
+
+  const auto now = node_->now();
+
+  ComputePathThroughPoses::Goal g;
+
+  if (use_explicit_start_) {
+    g.use_start = true;
+    g.start = explicit_start_;
+    if (g.start.header.frame_id.empty()) {
+      g.start.header.frame_id = fixed_frame_;
+    }
+    if (rclcpp::Time(g.start.header.stamp).nanoseconds() == 0) {
+      g.start.header.stamp = now;
+    }
+    g.goals = poses_;
+  } else {
+    if (poses_.size() < 2) {
+      QMessageBox::warning(this, "Plan", "Need at least 2 poses (start + goal).");
+      return;
+    }
+    g.use_start = true;
+    g.start = poses_.front();
+    g.goals.assign(poses_.begin() + 1, poses_.end());
+  }
+
+  g.planner_id = "";
+  auto opts = rclcpp_action::Client<ComputePathThroughPoses>::SendGoalOptions{};
+  opts.result_callback = [this](const GoalHandleCPTP::WrappedResult & res){
+    if (res.code != rclcpp_action::ResultCode::SUCCEEDED) {
+      RCLCPP_WARN(node_->get_logger(), "Planner failed.");
+      return;
+    }
+    auto path = res.result->path;
+    if (path.header.frame_id.empty()) path.header.frame_id = fixed_frame_;
+    path.header.stamp = node_->now();
+    if (preview_pub_) preview_pub_->publish(path);
+    RCLCPP_INFO(node_->get_logger(), "Preview path published: %zu poses", path.poses.size());
+  };
+
+  planner_client_->async_send_goal(g, opts);
+}
+void ClickedPoseLoggerPanel::onClearPathClicked()
+{
+  clearPreviewPath();
+  RCLCPP_INFO(node_->get_logger(), "Preview path cleared.");  
+}
+
+}// namespace navi_plugin
  
 
 PLUGINLIB_EXPORT_CLASS(
