@@ -25,7 +25,7 @@ def generate_launch_description():
         package='scanmatcher',
         executable='scanmatcher_node',
         parameters=[main_param_dir],
-        remappings=[('/input_cloud','/ouster/points')],
+        remappings=[('/input_cloud','/patchworkpp/nonground')],
         # remappings=[('/input_cloud','/points_raw')],
         # remappings=[('/input_cloud','/velodyne_points')],
         output='screen'

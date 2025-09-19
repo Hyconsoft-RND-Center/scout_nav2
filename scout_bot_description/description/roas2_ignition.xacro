@@ -37,38 +37,42 @@
   <xacro:property name="min_lidar_range" value="0.3" />
   <xacro:property name="max_lidar_angle" value="2.35619" />      
   <xacro:property name="min_lidar_angle" value="-2.35619" />
-  <xacro:property name="lidar_horizonal_rays" value="128" /> <!-- 1024 -->
-  <xacro:property name="lidar_vertical_rays" value="16" />    <!-- 32  -->
+  <xacro:property name="lidar_horizonal_rays" value="1024" /> <!-- 1024 -->
+  <xacro:property name="lidar_vertical_rays" value="32" />    <!-- 32  -->
   <xacro:property name="lidar_frame_id" value="'os_sensor'" />
   <xacro:property name="lidar_topic" value="'/ouster'" />
 
   <!-- IMU spec -->
   <xacro:property name="imu_update_rate" value="100" />
   <xacro:property name="imu_frame_id" value="'imu_link'" />
-  <xacro:property name="imu_topic" value="'/imu/out'" />
+  <xacro:property name="imu_topic" value="'/ouster/imu'" />
 
   <!-- Ultrasonic spec -->
-  <xacro:property name="ultrasonic_update_rate" value="100" />
-  <xacro:property name="ultrasonic_max_range" value="4.8" />
-  <xacro:property name="ultrasonic_min_range" value="0.2" />
+  <xacro:property name="ultrasonic_update_rate" value="10" /> <!-- 100 -->
+  <xacro:property name="ultrasonic_max_range" value="1.8" />
+  <xacro:property name="ultrasonic_min_range" value="0.1" />
+  <xacro:property name="ultrasonic_min_angle" value="-0.2" />
+  <xacro:property name="ultrasonic_max_angle" value="0.2" />
 
   <xacro:property name="right_ultrasonic_frame_id" value="'S1'" />
   <xacro:property name="left_ultrasonic_frame_id" value="'S2'" />
   <xacro:property name="rear_left_ultrasonic_frame_id" value="'S3'" />
   <xacro:property name="rear_right_ultrasonic_frame_id" value="'S4'" />
-  <xacro:property name="right_ultrasonic_topic" value="'/'" />
-  <xacro:property name="left_ultrasonic_topic" value="''" />
-  <xacro:property name="rear_left_ultrasonic_topic" value="''" />
-  <xacro:property name="rear_right_ultrasonic_topic" value="''" />
+  <xacro:property name="right_ultrasonic_topic" value="'/ultrasonic_right'" />
+  <xacro:property name="left_ultrasonic_topic" value="'/ultrasonic_left'" />
+  <xacro:property name="rear_left_ultrasonic_topic" value="'/ultrasonic_rear_left'" />
+  <xacro:property name="rear_right_ultrasonic_topic" value="'/ultrasonic_rear_right'" />
 
   <!-- GNSS spec -->
   <xacro:property name="gnss_update_rate" value="5.0" />
-  <xacro:property name="gnss_latitude" value="37.4220"/>
-  <xacro:property name="gnss_longitude" value="127.0838"/>
+  <xacro:property name="gnss_latitude" value="37.3969"/>
+  <xacro:property name="gnss_longitude" value="127.1129"/>
   <!-- <xacro:property name="gnss_altitude" value=""/> -->
   <xacro:property name="gnss_velocity_sensing" value="true"/>
   <xacro:property name="gnss1_frame_id" value="gnss1"/>
   <xacro:property name="gnss2_frame_id" value="gnss2"/>
+  <xacro:property name="gnss1_topic_id" value="'/gnss1'" />
+  <xacro:property name="gnss2_topic_id" value="'/gnss2'" />
 
   <!-- Camera spec -->
   <xacro:property name="camera_update_rate" value="30" />
@@ -543,23 +547,6 @@
     </sensor>
   </gazebo>
 
-
-  <!-- GNSS Sensor -->
-  <!-- <sensor name="gnss_sensor" type="gps">
-    <pose>0 0 1 0 0 0</pose> 
-    <update_rate>5.0</update_rate>
-    <gps>
-      <position_sensing>
-        <horizontal_position_noise>0.1</horizontal_position_noise>
-        <vertical_position_noise>0.1</vertical_position_noise>
-      </position_sensing>
-      <velocity_sensing>
-        <horizontal_velocity_noise>0.1</horizontal_velocity_noise>
-        <vertical_velocity_noise>0.1</vertical_velocity_noise>
-      </velocity_sensing>
-    </gps>
-  </sensor> -->
-
   <link name="gnss1_link" />
   <joint name="gnss1_joint" type="fixed">
     <parent link="base_link" />
@@ -572,17 +559,32 @@
       <always_on>true</always_on>
       <update_rate>${gnss_update_rate}</update_rate>
       <ignition_frame_id>${gnss1_frame_id}</ignition_frame_id>
-      <position_sensing>
-        <reference_latitude>${gnss_latitude}</reference_latitude>
-        <reference_longitude>${gnss_longitude}</reference_longitude>
-      </position_sensing>
+      <topic>${gnss1_topic_id}</topic>
+      <navsat>
+        <position_sensing>
+          <!-- <reference_latitude>${gnss_latitude}</reference_latitude>
+          <reference_longitude>${gnss_longitude}</reference_longitude> -->
+          <horizontal>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1e-5</stddev> <!-- 1~2m -->
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1e-5</stddev>
+            </noise>
+          </vertical>
+        </position_sensing>
+      </navsat>
     </sensor>
   </gazebo>
 
   <link name="gnss2_link" />
   <joint name="gnss2_joint" type="fixed">
     <parent link="base_link" />
-    <child link="gnss2_link" />
+    <child link="gnss2_link" />`
     <origin rpy="0 0 0" xyz="-0.454046 -0.354046 0.1" />
   </joint>
 
@@ -591,10 +593,121 @@
       <always_on>true</always_on>
       <update_rate>${gnss_update_rate}</update_rate>
       <ignition_frame_id>${gnss2_frame_id}</ignition_frame_id>
-      <position_sensing>
-        <reference_latitude>${gnss_latitude}</reference_latitude>
-        <reference_longitude>${gnss_longitude}</reference_longitude>
-      </position_sensing>
+      <topic>${gnss2_topic_id}</topic>
+      <navsat>
+        <position_sensing>
+          <!-- <reference_latitude>${gnss_latitude}</reference_latitude>
+          <reference_longitude>${gnss_longitude}</reference_longitude> -->
+          <horizontal>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>1.5</stddev> <!-- m -->
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>3.0</stddev>
+            </noise>
+          </vertical>
+        </position_sensing>
+      </navsat>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="S1">
+    <sensor name="ultrasonic_right" type="gpu_lidar">
+      <topic>${right_ultrasonic_topic}</topic>
+      <update_rate>${ultrasonic_update_rate}</update_rate>
+      <ignition_frame_id>${right_ultrasonic_frame_id}</ignition_frame_id>
+      <always_on>true</always_on>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>${ultrasonic_min_angle}</min_angle>
+            <max_angle>${ultrasonic_max_angle}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>${ultrasonic_min_range}</min>
+          <max>${ultrasonic_max_range}</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="S2">
+    <sensor name="ultrasonic_left" type="gpu_lidar">
+      <topic>${left_ultrasonic_topic}</topic>
+      <update_rate>${ultrasonic_update_rate}</update_rate>
+      <ignition_frame_id>${left_ultrasonic_frame_id}</ignition_frame_id>
+      <always_on>true</always_on>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>${ultrasonic_min_angle}</min_angle>
+            <max_angle>${ultrasonic_max_angle}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>${ultrasonic_min_range}</min>
+          <max>${ultrasonic_max_range}</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="S3">
+    <sensor name="ultrasonic_rear_left" type="gpu_lidar">
+      <topic>${rear_left_ultrasonic_topic}</topic>
+      <update_rate>${ultrasonic_update_rate}</update_rate>
+      <ignition_frame_id>${rear_left_ultrasonic_frame_id}</ignition_frame_id>
+      <always_on>true</always_on>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>${ultrasonic_min_angle}</min_angle>
+            <max_angle>${ultrasonic_max_angle}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>${ultrasonic_min_range}</min>
+          <max>${ultrasonic_max_range}</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="S4">
+    <sensor name="ultrasonic_rear_right" type="gpu_lidar">
+      <topic>${rear_right_ultrasonic_topic}</topic>
+      <update_rate>${ultrasonic_update_rate}</update_rate>
+      <ignition_frame_id>${rear_right_ultrasonic_frame_id}</ignition_frame_id>
+      <always_on>true</always_on>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>${ultrasonic_min_angle}</min_angle>
+            <max_angle>${ultrasonic_max_angle}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>${ultrasonic_min_range}</min>
+          <max>${ultrasonic_max_range}</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
     </sensor>
   </gazebo>
 

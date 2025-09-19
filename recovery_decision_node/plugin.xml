@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<library path="librecovery_decision_node_bt_plugins.so">
+  <class name="RosTopicCondition" 
+  type="TopicBooleanCondition" 
+  base_class_type="BT::ConditionNode">
+    <description>Returns SUCCESS if the boolean topic is true, otherwise FAILURE.</description>
+  </class>
+</library>

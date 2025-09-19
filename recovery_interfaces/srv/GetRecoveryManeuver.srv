@@ -1,0 +1,7 @@
+# Request
+---
+# Response
+string command      # "SPIN", "BACKUP", "WAIT" 등 행동의 종류
+float32 spin_dist   # 회전할 각도 (라디안)
+float32 spin_direction # 1.0은 왼쪽(CCW), -1.0은 오른쪽(CW)
+float32 backup_dist  # 후진할 거리

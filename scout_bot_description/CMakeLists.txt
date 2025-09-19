@@ -43,7 +43,7 @@ install(TARGETS imu_no_orientation_node DESTINATION lib/${PROJECT_NAME})
 install(TARGETS ultrasonic_obstacle_detection_node DESTINATION lib/${PROJECT_NAME})
 
 install(
-  DIRECTORY launch rviz config meshes description
+  DIRECTORY launch rviz config meshes description maps worlds models
   DESTINATION share/${PROJECT_NAME}
 )
 install(

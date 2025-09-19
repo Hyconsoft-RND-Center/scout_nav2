@@ -17,13 +17,13 @@ class config:
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration("use_sim_time", default="false")
+    use_sim_time = LaunchConfiguration("use_sim_time", default="true")
 
     # tf tree configuration, these are the likely 3 parameters to change and nothing else
     base_frame = LaunchConfiguration("base_frame", default="base_link")
 
     # ROS configuration
-    # pointcloud_topic = LaunchConfiguration("cloud_topic")
+    pointcloud_topic = LaunchConfiguration("cloud_topic")
     visualize = LaunchConfiguration("visualize", default="true")
 
     # Optional ros bag play
@@ -36,8 +36,7 @@ def generate_launch_description():
         name="patchworkpp_node",
         output="screen",
         remappings=[
-            # ("pointcloud_topic", pointcloud_topic),
-            ("pointcloud_topic", "/ouster/points"),
+            ("pointcloud_topic", pointcloud_topic),
         ],
         parameters=[
             {
@@ -45,7 +44,7 @@ def generate_launch_description():
                 "base_frame": base_frame,
                 "use_sim_time": use_sim_time,
                 # Patchwork++ configuration
-                "sensor_height": 0.66, # default: 1.88
+                "sensor_height": 1.88,
                 "num_iter": 3,  # Number of iterations for ground plane estimation using PCA.
                 "num_lpr": 20,  # Maximum number of points to be selected as lowest points representative.
                 "num_min_pts": 0,  # Minimum number of points to be estimated as ground plane in each patch.

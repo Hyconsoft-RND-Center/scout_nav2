@@ -34,10 +34,12 @@ add_library(navi_plugin SHARED
   src/clicked_point_logger_panel.cpp
   src/clicked_pose_logger_panel.cpp
   src/waypoint_navigator_panel.cpp
+  # src/follow_waypoints_from_csv_node.cpp
   src/pose2d_tool.cpp
   include/navi_plugin/clicked_point_logger_panel.hpp
   include/navi_plugin/clicked_pose_logger_panel.hpp
   include/navi_plugin/waypoint_navigator_panel.hpp
+  # include/navi_plugin/pose_csv.hpp
   include/navi_plugin/pose2d_tool.hpp
 )
 
@@ -84,6 +86,21 @@ target_include_directories(pose_marker_publisher PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
+# add_executable(follow_waypoints src/follow_waypoints_from_csv_node.cpp)
+# ament_target_dependencies(follow_waypoints
+#   rclcpp
+#   rclcpp_action
+#   geometry_msgs
+#   nav2_msgs
+#   tf2
+#   tf2_ros
+#   tf2_geometry_msgs
+# )
+# target_include_directories(follow_waypoints PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>
+# )
+
 # Install targets
 install(TARGETS ${PROJECT_NAME}
   EXPORT ${PROJECT_NAME}
@@ -93,6 +110,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 install(TARGETS waypoint_marker_publisher DESTINATION lib/${PROJECT_NAME})
 install(TARGETS pose_marker_publisher DESTINATION lib/${PROJECT_NAME})
+# install(Targets follow_waypoints DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/
   DESTINATION include

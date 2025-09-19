@@ -25,6 +25,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         arguments=['0','0','0','0','0','0','1','base_link','os_sensor'],
+        #arguments=['-0.5421','-0.002','-0.3855','0','0','0','1','base_link','os_sensor']
         #arguments=['0','0','0','0','0','0','1','base_link','velodyne']
         )
 
@@ -49,7 +50,8 @@ def generate_launch_description():
         executable='lidar_localization_node',
         parameters=[localization_param_dir],
         remappings=[('/cloud','/ouster/points'),
-                    #('/odom', '/odometry/filtered'),
+                    ('/odom', '/odometry/filtered'),
+                    ('map', 'pointcloud_map'),
                     # ('/tf', '/tf_from_lidar'),
                     # ('/tf_static', '/tf_static_from_lidar'),
         ], 

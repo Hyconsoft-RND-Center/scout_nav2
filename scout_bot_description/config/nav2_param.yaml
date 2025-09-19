@@ -57,7 +57,7 @@ bt_navigator:
     robot_base_frame: base_link
     odom_topic: /odometry/filtered # /odometry/filtered
     bt_loop_duration: 10
-    default_server_timeout: 60
+    default_server_timeout: 60 # 20
     wait_for_service_timeout: 1000
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -114,6 +114,7 @@ bt_navigator:
       - nav2_assisted_teleop_cancel_bt_node
       - nav2_drive_on_heading_cancel_bt_node
 
+      # 추가 Custom BT plugins
      # - recovery_decision_node_bt_plugins
       
 
@@ -128,11 +129,11 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: False
-    controller_frequency: 10.0 # 20Hz 정도면 충분
+    controller_frequency: 10.0 # 20.0
     min_x_velocity_threshold: 0.01 # 너무 낮으면 정지판단 어려움
-    min_y_velocity_threshold: 0.001 # diff_drive에서는 거의 의미 없음
+    min_y_velocity_threshold: 0.5 # diff_drive에서는 거의 의미 없음
     min_theta_velocity_threshold: 0.01
-    failure_tolerance: 0.5
+    failure_tolerance: 0.5 # 0.3
     transform_timeout: 1.0 # 0.5
     transform_tolerance: 0.5
 
@@ -143,92 +144,93 @@ controller_server:
     # 전진 상태 체크
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.3 # 너무 크면 정체 오탐 가능
-      movement_time_allowance: 2.0 # 옥외 주행 시, 매우 높여 계속적인 주행 유도 가능
+      required_movement_radius: 0.3 # 0.5 너무 크면 정체 오탐 가능
+      movement_time_allowance: 3.0 # 10.0 옥외 주행 시, 매우 높여 계속적인 주행 유도 가능
         # 10.0 # 해당 시간 동안 이동하지 못한 경우 fail 간주 후, recovery 진입 가능
 
     # 목표 도달 조건
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.3 # 2.0 → 너무 큼
-      yaw_goal_tolerance: 0.5 # 5.0 rad → 약 286도 → 비정상 → 0.5 rad ≈ 28도
+      xy_goal_tolerance: 0.3 # 0.25
+      yaw_goal_tolerance: 0.5 # 0.25
 
     # 로컬 컨트롤러 설정
     # Regulated Pure Pursuit
-    FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 1.0 # 0.5
-      lookahead_dist: 0.7
-      min_lookahead_dist: 0.1
-      max_lookahead_dist: 2.0
-      lookahead_time: 1.0 # 1.0
-      rotate_to_heading_angular_vel: 1.8 # 1.8
-      transform_tolerance: 1.0   # 0.1
-      use_velocity_scaled_lookahead_dist: false # false
-      min_approach_linear_velocity: 0.0
-      approach_velocity_scaling_dist: 0.6 # 0.6
-      use_collision_detection: true # true
-      max_allowed_time_to_collision_up_to_carrot: 2.0 # 1.5 충돌 예측 거리
-      use_regulated_linear_velocity_scaling: true
-      use_fixed_curvature_lookahead: false         #속도 기반 carrot 조정
-      curvature_lookahead_dist: 0.25
-      use_cost_regulated_linear_velocity_scaling: true # false # 장애물 회피 관련 속도 조절
-      regulated_linear_scaling_min_radius: 0.2 # 1.0 # 회전 반경이 작아질 수록 선속도 감속
-      regulated_linear_scaling_min_speed: 0.15 # 장애물을 감지한 경우 최대로 줄일 수 있는 속도
-      use_rotate_to_heading: true
-      allow_reversing: true # false
-      rotate_to_heading_min_angle: 0.3 # 0.785 # 해당 값이 작으면 정지 회전 유도, 크면 anckermann 같은 회전 유도
-      max_angular_accel: 3.2
-      max_robot_pose_search_dist: 10.0
-      debug_trajectory_details: False # 디버그용 아니면 False
-      use_velocity_scaling: true
-      use_regulated_lookahead_dist: true
-      regulate_by_approach_angle: true
-      inflation_cost_scaling_factor: 1.5
-      cost_scaling_dist: 3.0  # 주행 cost가 바뀌는 거리 
+    # FollowPath:
+    #   plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+    #   desired_linear_vel: 1.0 # 0.5
+    #   lookahead_dist: 0.7
+    #   min_lookahead_dist: 0.1
+    #   max_lookahead_dist: 2.0
+    #   lookahead_time: 1.0 # 1.0
+    #   rotate_to_heading_angular_vel: 1.8 # 1.8
+    #   transform_tolerance: 1.0   # 0.1
+    #   use_velocity_scaled_lookahead_dist: false # false
+    #   min_approach_linear_velocity: 0.0
+    #   approach_velocity_scaling_dist: 0.6 # 0.6
+    #   use_collision_detection: true # true
+    #   max_allowed_time_to_collision_up_to_carrot: 2.0 # 1.5 충돌 예측 거리
+    #   use_regulated_linear_velocity_scaling: true
+    #   use_fixed_curvature_lookahead: false         #속도 기반 carrot 조정
+    #   curvature_lookahead_dist: 0.25
+    #   use_cost_regulated_linear_velocity_scaling: true # false # 장애물 회피 관련 속도 조절
+    #   regulated_linear_scaling_min_radius: 0.2 # 1.0 # 회전 반경이 작아질 수록 선속도 감속
+    #   regulated_linear_scaling_min_speed: 0.15 # 장애물을 감지한 경우 최대로 줄일 수 있는 속도
+    #   use_rotate_to_heading: true
+    #   allow_reversing: true # false
+    #   rotate_to_heading_min_angle: 0.3965 # 0.785 # 해당 값이 작으면 정지 회전 유도, 크면 anckermann 같은 회전 유도
+    #   max_angular_accel: 3.2
+    #   max_robot_pose_search_dist: 10.0
+    #   debug_trajectory_details: False # 디버그용 아니면 False
+    #   use_velocity_scaling: true
+    #   use_regulated_lookahead_dist: true
+    #   regulate_by_approach_angle: true
+    #   inflation_cost_scaling_factor: 1.5
+    #   cost_scaling_dist: 2.0  # 주행 cost가 바뀌는 거리 
 
     # DWB
-    # FollowPath:
-    #   plugin: "dwb_core::DWBLocalPlanner"
-    #   debug_trajectory_details: True
-    #   min_vel_x: 0.0
-    #   min_vel_y: 0.0
-    #   max_vel_x: 0.26
-    #   max_vel_y: 0.0
-    #   max_vel_theta: 1.0
-    #   min_speed_xy: 0.0
-    #   max_speed_xy: 0.26
-    #   min_speed_theta: 0.0
-    #   acc_lim_x: 2.5
-    #   acc_lim_y: 0.0
-    #   acc_lim_theta: 3.2
-    #   decel_lim_x: -2.5
-    #   decel_lim_y: 0.0
-    #   decel_lim_theta: -3.2
-    #   vx_samples: 20
-    #   vy_samples: 5
-    #   vtheta_samples: 20
-    #   sim_time: 1.7
-    #   linear_granularity: 0.05
-    #   angular_granularity: 0.025
-    #   transform_tolerance: 0.2
-    #   xy_goal_tolerance: 0.25
-    #   trans_stopped_velocity: 0.25
-    #   short_circuit_trajectory_evaluation: True
-    #   limit_vel_cmd_in_traj: False
-    #   stateful: True
-    #   critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-    #   BaseObstacle.scale: 0.02
-    #   PathAlign.scale: 32.0
-    #   GoalAlign.scale: 24.0
-    #   PathAlign.forward_point_distance: 0.1
-    #   GoalAlign.forward_point_distance: 0.1
-    #   PathDist.scale: 32.0
-    #   GoalDist.scale: 24.0
-    #   RotateToGoal.scale: 32.0
-    #   RotateToGoal.slowing_factor: 5.0
-    #   RotateToGoal.lookahead_time: -1.0
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.26
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.26
+      min_speed_theta: 0.0
+      # Add high threshold velocity for turtlebot 3 issue.
+      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
 
 local_costmap:
   local_costmap:
@@ -238,14 +240,19 @@ local_costmap:
       robot_base_frame: base_link
       footprint: "[[-0.6, -0.5], [-0.6, 0.4], [0.65, 0.5], [0.65, -0.4]]" # 로봇의 실제 크기를 반영
       #footprint: "[[-0.4, -0.3], [-0.4, 0.3], [0.4, 0.3], [0.4, -0.3]]" # 로봇의 실제 크기를 반영
+      # robot_radius: 0.22
       update_frequency: 10.0
       publish_frequency: 10.0
-      width: 10
-      height: 10
+      width: 8 # 3
+      height: 8 # 3
       resolution: 0.05
       rolling_window: true
-
-      plugins: ["obstacle_layer", "inflation_layer"] #
+      plugins: ["stvl_layer", "range_layer", "inflation_layer"] #"stvl_layer", "range_layer", "obstacle_layer", "inflation_layer" "stvl_layer",
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        inflation_radius: 0.8 # 1.5   # 1.2         
+        cost_scaling_factor: 3.0 # 3.0
 
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -255,8 +262,7 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: pointcloud
-
+        observation_sources: "pointcloud"
         pointcloud:
           data_type: PointCloud2
           topic: /ouster/points
@@ -269,29 +275,37 @@ local_costmap:
           min_z: 0.05                     # LiDAR에서 지면 반사 제외
           max_z: 5.0
           voxel_min_points: 1             # marking 최소 포인트 조건
-          clear_after_reading: false      # marking 실패 방지
+          clear_after_reading: true      # marking 실패 방지
           expected_update_rate: 0.1
 
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
+      range_layer:
+        plugin: "nav2_costmap_2d::RangeSensorLayer"
         enabled: true
-        inflation_radius: 1.2 # 1.5            
-        cost_scaling_factor: 1.5
+        topics: ["/sensor/s1_data", "/sensor/s2_data", "/sensor/s3_data", "/sensor/s4_data"]
+        input_sensor_type: "ALL"
+        clear_on_max_reading: true
+        # no_readings_timeout: 0.25
+        phi: 1.8 # 1.2
+        inflate_cone: 1.5 # 1.0 # 
+        mark_threshold: 0.5 # 0.8 # 값이 낮을 수록 costmap에 더 진하게 Marking, 0.5 이상 권장
+        clear_threshold: 0.2
+        marking: true
+        clearing: true
 
       stvl_layer:
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled: true
         voxel_decay: 15.
-        decay_model: 1
+        decay_model: 0
         voxel_size: 0.05
         track_unknown_space: true
-        unknown_threshold: 5 # 15 # 하나의 voxel이 unknown으로 간주되기 위한 조건
-        mark_threshold: 1 # 0
+        unknown_threshold: 15
+        mark_threshold: 0
         update_footprint_enabled: true
         combination_method: 1
         origin_z: 0.0
         publish_voxel_map: true
-        transform_tolerance: 1.0 # 0.2
+        transform_tolerance: 0.2
         mapping_mode: false
         map_save_duration: 60.0
         observation_sources: pointcloud
@@ -301,10 +315,10 @@ local_costmap:
           marking: true
           clearing: true
           obstacle_range: 3.0
-          min_obstacle_height: 0.05
+          min_obstacle_height: 0.0
           max_obstacle_height: 2.0
-          expected_update_rate: 0.1
-          observation_persistence: 0.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.5 # 0.0
           inf_is_valid: false
           filter: "voxel"
           voxel_min_points: 0
@@ -334,32 +348,42 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       transform_tolerance: 1.0 # 0.5
-      robot_radius: 0.22
-      #resolution: 0.05
-      track_unknown_space: false
-      plugins: ["static_layer", "inflation_layer"]
+      # robot_radius: 0.22
+      resolution: 0.05 
+      width: 100
+      height: 100
+      rolling_window: true
+      track_unknown_space: true
+      always_send_full_costmap: true
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"] # "static_layer", 
       footprint: "[[[-0.6, -0.5], [-0.6, 0.4], [0.65, 0.5], [0.65, -0.4]]]"
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.5
-        inflation_radius: 1.2
+        cost_scaling_factor: 3.0 # 3.0
+        inflation_radius: 0.8 # 1.2
 
-      # obstacle_layer:
-      #   plugin: "nav2_costmap_2d::ObstacleLayer"
-      #   enabled: True
-      #   observation_sources: pointcloud
-      #   pointcloud:
-      #     topic: /ouster/points
-      #     sensor_frame: os_sensor
-      #     data_type: "sensor_msgs/msg/PointCloud2"
-      #     marking: True
-      #     clearing: True
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: true
+        z_resolution: 0.1
+        z_voxels: 16
+        mark_threshold: 1
+        unknown_threshold: 10
+        observation_sources: pointcloud
+        pointcloud:
+          data_type: PointCloud2
+          topic: /ouster/points
+          marking: true
+          clearing: true
+          obstacle_range: 30.0
+          raytrace_range: 35.0
+          min_obstacle_height: 0.05
+          max_obstacle_height: 2.5
 
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
-      always_send_full_costmap: True
 
 map_server:
   ros__parameters:
@@ -383,55 +407,71 @@ planner_server:
     expected_planner_frequency: 20.0
     use_sim_time: False
 
-    planner_plugins: ["GridBased"]
-
+    # planner_plugins: ["GridBased"]
+    # GridBased:
+    #   plugin: "nav2_smac_planner::SmacPlanner2D" # In Iron and older versions, "/" was used instead of "::"
+    #   tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters
+    #   downsample_costmap: false             # whether or not to downsample the map
+    #   downsampling_factor: 1                # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
+    #   allow_unknown: true                   # allow traveling in unknown space
+    #   max_iterations: 1000000               # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
+    #   max_on_approach_iterations: 1000      # maximum number of iterations to attempt to reach goal once in tolerance
+    #   max_planning_time: 2.0                # max time in s for planner to plan, smooth
+    #   cost_travel_multiplier: 2.0           # Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
+    #   use_final_approach_orientation: false # Whether to set the final path pose at the goal's orientation to the requested orientation (false) or in line with the approach angle so the robot doesn't rotate to heading (true)
+    #   smoother:
+    #     max_iterations: 1000
+    #     w_smooth: 0.3
+    #     w_data: 0.2
+    #     tolerance: 1.0e-10
+      
     # smac hybrid astar
-    GridBased:
-      plugin: "nav2_smac_planner/SmacPlannerHybrid" # In Iron and older versions, "/" was used instead of "::"
-      downsample_costmap: false           # whether or not to downsample the map
-      downsampling_factor: 1              # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
-      tolerance: 0.25                     # dist-to-goal heuristic cost (distance) for valid tolerance endpoints if exact goal cannot be found.
-      allow_unknown: true                 # allow traveling in unknown space
-      max_iterations: 100000 # 1000000             # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
-      max_on_approach_iterations: 1000    # Maximum number of iterations after within tolerances to continue to try to find exact solution
-      max_planning_time: 5.0              # max time in s for planner to plan, smooth
-      motion_model_for_search: "DUBIN"    # Hybrid-A* Dubin, Redds-Shepp
-      angle_quantization_bins: 72         # Number of angle bins for search
-      analytic_expansion_ratio: 3.5       # The ratio to attempt analytic expansions during search for final approach.
-      analytic_expansion_max_length: 3.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
-      analytic_expansion_max_cost: 200.0  # The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
-      analytic_expansion_max_cost_override: false  #  Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
-      minimum_turning_radius: 0.1  # 0.4      # minimum turning radius in m of path / vehicle
-      reverse_penalty: 2.0                # Penalty to apply if motion is reversing, must be => 1
-      change_penalty: 0.0                 # Penalty to apply if motion is changing directions (L to R), must be >= 0
-      non_straight_penalty: 1.2           # Penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 2.0                   # Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
-      retrospective_penalty: 0.015
-      lookup_table_size: 20.0             # Size of the dubin/reeds-sheep distance window to cache, in meters.
-      cache_obstacle_heuristic: false     # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
-      debug_visualizations: false         # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.
-      use_quadratic_cost_penalty: False
-      downsample_obstacle_heuristic: True
-      allow_primitive_interpolation: False
-      coarse_search_resolution: 4         # Number of bins to skip when doing a coarse search for the path. Only used for all_direction goal heading mode.
-      goal_heading_mode: "DEFAULT"        # DEFAULT, BIDIRECTIONAL, ALL_DIRECTION
-      smooth_path: True                   # If true, does a simple and quick smoothing post-processing to the path
+    # GridBased:
+    #   plugin: "nav2_smac_planner/SmacPlannerHybrid" # In Iron and older versions, "/" was used instead of "::"
+    #   downsample_costmap: false           # whether or not to downsample the map
+    #   downsampling_factor: 1              # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
+    #   tolerance: 0.25                     # dist-to-goal heuristic cost (distance) for valid tolerance endpoints if exact goal cannot be found.
+    #   allow_unknown: true                 # allow traveling in unknown space
+    #   max_iterations: 1000000 # 1000000             # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
+    #   max_on_approach_iterations: 1000    # Maximum number of iterations after within tolerances to continue to try to find exact solution
+    #   max_planning_time: 5.0              # max time in s for planner to plan, smooth
+    #   motion_model_for_search: "DUBIN"    # Hybrid-A* Dubin, Redds-Shepp
+    #   angle_quantization_bins: 72         # Number of angle bins for search
+    #   analytic_expansion_ratio: 3.5       # The ratio to attempt analytic expansions during search for final approach.
+    #   analytic_expansion_max_length: 3.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
+    #   analytic_expansion_max_cost: 200.0  # The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
+    #   analytic_expansion_max_cost_override: false  #  Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
+    #   minimum_turning_radius: 0.1  # 0.4      # minimum turning radius in m of path / vehicle
+    #   reverse_penalty: 2.0                # Penalty to apply if motion is reversing, must be => 1
+    #   change_penalty: 0.0                 # Penalty to apply if motion is changing directions (L to R), must be >= 0
+    #   non_straight_penalty: 1.2           # Penalty to apply if motion is non-straight, must be => 1
+    #   cost_penalty: 2.0                   # Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+    #   retrospective_penalty: 0.015
+    #   lookup_table_size: 20.0             # Size of the dubin/reeds-sheep distance window to cache, in meters.
+    #   cache_obstacle_heuristic: false     # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
+    #   debug_visualizations: false         # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.
+    #   use_quadratic_cost_penalty: False
+    #   downsample_obstacle_heuristic: True
+    #   allow_primitive_interpolation: False
+    #   coarse_search_resolution: 4         # Number of bins to skip when doing a coarse search for the path. Only used for all_direction goal heading mode.
+    #   goal_heading_mode: "DEFAULT"        # DEFAULT, BIDIRECTIONAL, ALL_DIRECTION
+    #   smooth_path: True                   # If true, does a simple and quick smoothing post-processing to the path
 
-      smoother:
-        max_iterations: 1000
-        w_smooth: 0.3
-        w_data: 0.2
-        tolerance: 1.0e-10
-        do_refinement: true
-        refinement_num: 2
+      # smoother:
+      #   max_iterations: 1000
+      #   w_smooth: 0.3
+      #   w_data: 0.2
+      #   tolerance: 1.0e-10
+      #   do_refinement: true
+      #   refinement_num: 2
 
 
       # navfn
-    # GridBased:
-    #   plugin: "nav2_navfn_planner/NavfnPlanner"
-    #   tolerance: 0.5 # 0.5
-    #   use_astar: true # default: false
-    #   allow_unknown: true
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5 # 0.5
+      use_astar: true # default: false
+      allow_unknown: true
 
 smoother_server:
   ros__parameters:
@@ -442,9 +482,9 @@ smoother_server:
       tolerance: 1.0e-10
       max_its: 1000
       do_refinement: True
-      refinement_num: 2
-      w_data: 0.2
-      w_smooth: 0.3
+      # refinement_num: 2
+      # w_data: 0.2
+      # w_smooth: 0.3
       enforce_path_inversion: True
 
 behavior_server:
@@ -494,11 +534,11 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [1.0, 0.0, 4.0]
-    min_velocity: [-1.5, 0.0, -4.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: "odom" # odom
+    max_velocity: [0.26, 0.0, 1.0]
+    min_velocity: [-0.26, 0.0, -1.0]
+    max_accel: [1.34, 0.0, 1.67]
+    max_decel: [-1.34, 0.0, -1.67]
+    odom_topic: "/odometry/filtered" # odom
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.05] # 일정 이하의 속도 cut [x, y, z]
     velocity_timeout: 1.0
@@ -521,20 +561,30 @@ collision_monitor:
     # Footprint could be "polygon" type with dynamically set footprint from footprint_topic
     # or "circle" type with static footprint set by radius. "footprint_topic" parameter
     # to be ignored in circular case.
-    polygons: ["PolygonStop", ] # "PolygonStop", "PolygonSlow", #"FootprintApproach"
+    polygons: ["PolygonStop", "RearStop", "FootprintApproach"] # "PolygonStop", "PolygonSlow", 
     PolygonStop:
       type: "polygon"
-      points: [1.5, 1.5, 1.5, -1.5, -1.5, 1.5, -1.5, -1.5] # [x1, y1, x2, y2, ...]
+      points: [0.5, -0.6, 0.5, 0.6, 1.6, 0.6, 1.6, -0.6] # [x1, y1, x2, y2, ...]
       action_type: "stop"
       max_points: 4
       visualize: True
       polygon_pub_topic: "polygon_stop"
-      scale_linear_speed: 3.0   
+      scale_linear_speed: 2.0   
+      scale_angular_speed: 1.0
+      enabled: True
+    RearStop:
+      type: "polygon"
+      points: [-0.5, -0.6, -0.5, 0.6, -1.6, 0.6, -1.6, -0.6] # [x1, y1, x2, y2, ...]
+      action_type: "stop"
+      max_points: 4
+      visualize: True
+      polygon_pub_topic: "rear_polygon_stop"
+      scale_linear_speed: 3.0
       scale_angular_speed: 1.0
       enabled: True
     PolygonSlow:
       type: "polygon"
-      points: [2.5, 2.0, 2.5, -2.0, -2.5, -2.0, -2.5, 2.0] # [x1, y1, x2, y2, ...]
+      points: [2.5, -2.0, 2.5, 2.0, -2.5, 2.0, -2.5, -2.0] # [x1, y1, x2, y2, ...]
       action_type: "slowdown"
       max_points: 6
       slowdown_ratio: 0.7 # 0.3 # (입력 속도)*slowdown_ratio
@@ -545,17 +595,24 @@ collision_monitor:
       type: "polygon"
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 1.0 # 2.0
+      time_before_collision: 2.0 # 2.0
       simulation_time_step: 0.1  # 0.1
-      max_points: 5 # 5 
+      max_points: 5 # 5.0 
       visualize: true
       polygon_pub_topic: "polygon_approach"
       enabled: true
-    observation_sources: ["pointcloud"]
+    observation_sources: ["pointcloud", "rear_left", "rear_right"]
     pointcloud:
       type: "pointcloud"
       topic: "/ouster/points"
       min_height: 0.1
       max_height: 1.2
-      min_range: 0.2
+      enabled: True
+    rear_left:
+      type: "scan"
+      topic: "range/rear_left"
+      enabled: True
+    rear_right:
+      type: "scan"
+      topic: "range/rear_right"
       enabled: True

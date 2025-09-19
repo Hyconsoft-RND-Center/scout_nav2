@@ -58,6 +58,7 @@ def generate_launch_description() -> LaunchDescription:
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static'),
                     ('/odom', '/odometry/filtered'),
                     ('odom', '/odometry/filtered'),
+                    
                 ]
 
     # Create our own temporary YAML files that include substitutions
@@ -90,6 +91,7 @@ def generate_launch_description() -> LaunchDescription:
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
         # default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
+        # default_value=os.path.join(scout_dir, 'config', 'nav2_param_mapless.yaml'),
         default_value=os.path.join(scout_dir, 'config', 'nav2_param.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes',
     )
@@ -226,17 +228,17 @@ def generate_launch_description() -> LaunchDescription:
             #     arguments=['--ros-args', '--log-level', log_level],
             #     remappings=remappings,
             # ),
-            # Node(
-            #     package='opennav_docking',
-            #     executable='opennav_docking',
-            #     name='docking_server',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[configured_params],
-            #     arguments=['--ros-args', '--log-level', log_level],
-            #     remappings=remappings,
-            # ),
+            Node(
+                package='opennav_docking',
+                executable='opennav_docking',
+                name='docking_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings,
+            ),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
@@ -254,9 +256,9 @@ def generate_launch_description() -> LaunchDescription:
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [
-                    ('/cmd_vel_in', '/cmd_vel_raw'),
-                    ('/cmd_vel_out', '/cmd_vel')]
+                remappings=remappings #+ [
+                    # ('/cmd_vel_in', '/cmd_vel_raw'),
+                    # ('/cmd_vel_out', '/cmd_vel')]
             ),
         ],
     )

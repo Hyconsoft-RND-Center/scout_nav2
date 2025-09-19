@@ -1,0 +1,11 @@
+range_fan_bridge:
+  ros__parameters:
+    use_sim_time: true
+    input_topics: ["/sensor/s1_data", "/sensor/s2_data", "/sensor/s3_data", "/sensor/s4_data"]
+    output_scan_topics: ["/range/right", "/range/left", "/range/rear_left", "/range/rear_right"]
+    # (선택) 포인트클라우드도 내고 싶다면:
+    publish_cloud: false
+    output_cloud_topics: ["/rear_cloud_left", "/rear_cloud_right", "/rear_cloud_center", "/rear_cloud_corner"]
+
+    num_beams: 15              # 11~21 권장
+    cloud_angle_step_deg: 2.0  # PC2 점 간격(작을수록 조밀)

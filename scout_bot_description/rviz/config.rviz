@@ -6,9 +6,13 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /PointCloud21
+        - /Map1
+        - /Polygon4/Topic1
+        - /PoseWithCovariance1
+        - /Path2
+        - /Range1/Topic1
       Splitter Ratio: 0.5029411911964417
-    Tree Height: 325
+    Tree Height: 260
   - Class: nav2_rviz_plugins/Navigation 2
     Name: Navigation 2
   - Class: rviz_common/Views
@@ -21,6 +25,12 @@ Panels:
       - /Current View1
     Name: Views
     Splitter Ratio: 0.5
+  - Class: navi_plugin::WaypointNavigatorPanel
+    Name: WaypointNavigatorPanel
+  - Class: navi_plugin::ClickedPoseLoggerPanel
+    Name: ClickedPoseLoggerPanel
+  - Class: navi_plugin::ClickedPoseLoggerPanel
+    Name: ClickedPoseLoggerPanel
 Visualization Manager:
   Class: ""
   Displays:
@@ -111,6 +121,14 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        gnss1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gnss2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         imu_link:
           Alpha: 1
           Show Axes: false
@@ -175,6 +193,10 @@ Visualization Manager:
           Value: true
         front_right_wheel_link:
           Value: true
+        gnss1_link:
+          Value: true
+        gnss2_link:
+          Value: true
         imu_link:
           Value: true
         inertial_link:
@@ -223,6 +245,10 @@ Visualization Manager:
                 {}
               front_right_wheel_link:
                 {}
+              gnss1_link:
+                {}
+              gnss2_link:
+                {}
               imu_link:
                 {}
               inertial_link:
@@ -237,7 +263,7 @@ Visualization Manager:
       Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: false
       Enabled: true
       Name: Map
@@ -263,7 +289,7 @@ Visualization Manager:
         Min Value: -10
         Value: true
       Axis: Z
-      Channel Name: intensity
+      Channel Name: z
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
@@ -271,9 +297,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
+      Max Intensity: 1.355751633644104
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: -0.730837881565094
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
@@ -370,7 +396,7 @@ Visualization Manager:
       Max Intensity: 5603
       Min Color: 0; 0; 0
       Min Intensity: 12
-      Name: PointCloud2
+      Name: PCD Map
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -378,7 +404,7 @@ Visualization Manager:
       Style: Flat Squares
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
@@ -426,6 +452,19 @@ Visualization Manager:
         Value: /polygon_stop
       Value: true
     - Alpha: 1
+      Class: rviz_default_plugins/Polygon
+      Color: 134; 94; 60
+      Enabled: true
+      Name: Polygon
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rear_polygon_stop
+      Value: true
+    - Alpha: 1
       Class: rviz_default_plugins/PointStamped
       Color: 204; 41; 204
       Enabled: true
@@ -465,19 +504,6 @@ Visualization Manager:
         Value: /waypoints
       Value: false
     - Alpha: 1
-      Class: rviz_default_plugins/Polygon
-      Color: 28; 113; 216
-      Enabled: true
-      Name: Polygon
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /polygon_approach
-      Value: true
-    - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz_default_plugins/PoseWithCovariance
@@ -497,7 +523,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: PoseWithCovariance
@@ -511,6 +537,90 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /pcl_pose
+      Value: false
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 220; 138; 221
+      Enabled: false
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /path
+      Value: false
+    - Alpha: 0.5
+      Buffer Length: 1
+      Class: rviz_default_plugins/Range
+      Color: 255; 255; 255
+      Enabled: true
+      Name: Range
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /sensor/s1_data
+      Value: true
+    - Alpha: 0.5
+      Buffer Length: 1
+      Class: rviz_default_plugins/Range
+      Color: 255; 255; 255
+      Enabled: true
+      Name: Range
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /sensor/s2_data
+      Value: true
+    - Alpha: 0.5
+      Buffer Length: 1
+      Class: rviz_default_plugins/Range
+      Color: 255; 255; 255
+      Enabled: true
+      Name: Range
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /sensor/s3_data
+      Value: true
+    - Alpha: 0.5
+      Buffer Length: 1
+      Class: rviz_default_plugins/Range
+      Color: 255; 255; 255
+      Enabled: true
+      Name: Range
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /sensor/s4_data
       Value: true
   Enabled: true
   Global Options:
@@ -551,39 +661,49 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /clicked_point
+    - Class: navi_plugin::Pose2DTool
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
   Value: true
   Views:
     Current:
-      Angle: -17.339977264404297
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 4.887178421020508
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: -6.29189395904541
+        Y: -7.606930732727051
+        Z: -0.17595987021923065
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 54.68989944458008
+      Pitch: 1.0947966575622559
       Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: 1.0079314708709717
-      Y: -0.31850987672805786
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 4.745569229125977
     Saved: ~
 Window Geometry:
+  ClickedPoseLoggerPanel:
+    collapsed: false
   Displays:
     collapsed: false
-  Height: 1043
+  Height: 1294
   Hide Left Dock: false
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000156000003b9fc0200000004fb000000100044006900730070006c006100790073010000003d000001d0000000c900fffffffb00000018004e0061007600690067006100740069006f006e002000320100000213000001390000013900fffffffb0000000a00560069006500770073000000032d000000c9000000a400fffffffb0000000a005600690065007700730100000352000000a4000000a400ffffff000002f9000003b900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000156000004b4fc020000000cfb000000100044006900730070006c006100790073010000003d0000018f000000c900fffffffb00000018004e0061007600690067006100740069006f006e0020003201000001d2000001260000012600fffffffb0000000a00560069006500770073000000032d000000c9000000a400fffffffb0000000a0056006900650077007301000002fe000000a4000000a400fffffffb0000002c0057006100790070006f0069006e0074004e006100760069006700610074006f007200500061006e0065006c01000003a8000000960000009600fffffffb0000000c00430061006d00650072006102000001f50000015c0000015600000127fb0000000a0049006d006100670065020000026d000003310000015600000106fb0000000a0049006d006100670065020000026e0000022a000001560000010ffb0000000a0049006d00610067006502000002770000013000000149000000fefb0000000a0049006d00610067006502000001e800000031000001410000010ffb0000002c0043006c00690063006b006500640050006f00730065004c006f006700670065007200500061006e0065006c03000001b50000037000000178000000c8fb0000002c0043006c00690063006b006500640050006f00730065004c006f006700670065007200500061006e0065006c0100000444000000ad000000ad00ffffff000002f9000004b400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
+    collapsed: false
+  WaypointNavigatorPanel:
     collapsed: false
   Width: 1109
   X: 811
-  Y: 1080
+  Y: 27
